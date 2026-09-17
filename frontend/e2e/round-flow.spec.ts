@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 
 const ROOM_CODE_PATTERN = /^[A-HJ-NP-Z2-9]{4}$/;
 const MAX_TURNS = 30;
