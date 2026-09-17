@@ -12,3 +12,7 @@ coverage/
 **/test-results/
 playwright-report/
 blob-report/
+# Git worktrees (isolated implementation workspaces)
+/.worktrees/
+# Superpowers scratch dirs (ledgers, briefs, review packages)
+.superpowers/
