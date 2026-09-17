@@ -48,9 +48,9 @@ Task 1 liefert den fehlschlagenden Test (TDD). Die Tasks 2–6 machen ihn Schrit
 Erstelle `frontend/e2e/mobile-portrait.spec.ts` mit exakt diesem Inhalt:
 
 ```ts
-import { devices, expect, type Browser, type Page, test } from '@playwright/test';
+import { type Browser, devices, expect, type Page, test } from '@playwright/test';
 
-const MOBILE = { ...devices['Pixel 7'] };
+const MOBILE = { ...devices['Pixel 7'], viewport: { width: 360, height: 640 } };
 const ROOM_CODE_PATTERN = /^[A-HJ-NP-Z2-9]{4}$/;
 
 async function expectNoVerticalScroll(page: Page, label: string): Promise<void> {
@@ -79,7 +79,11 @@ async function joinRoomAs(page: Page, playerName: string, roomCode: string): Pro
   await expect(page.getByTestId('room-code')).toHaveText(roomCode);
 }
 
-test('Spiel-Screen passt ohne Scroll auf 360px-Breite', async ({ browser }: { browser: Browser }) => {
+test('Spiel-Screen passt ohne Scroll auf 360px-Breite', async ({
+  browser,
+}: {
+  browser: Browser;
+}) => {
   const ctxA = await browser.newContext(MOBILE);
   const ctxB = await browser.newContext(MOBILE);
   const alice = await ctxA.newPage();

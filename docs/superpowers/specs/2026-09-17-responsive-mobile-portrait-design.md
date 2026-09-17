@@ -10,7 +10,8 @@ Lobby, Spiel-Screen (Gegner, Stapel, Hand), Abrechnungs- und Regel-Modal.
 Querformat erhält bewusst **kein** eigenes Layout (darf scrollen, kein
 Drehen-Hinweis — YAGNI).
 
-Referenz-Viewport: 360×740 (kleine Android-/iOS-Geräte). Höhenbudget
+Referenz-Viewport: 360×640 (kleine Android-Geräte; auf 360×740 passt das
+Bestands-Layout bereits, der Engpass liegt bei kürzeren Screens). Höhenbudget
 (Ungefähr, nutzbare Höhe nach Browser-Chrome): Header ~48px, Gegner-Zeile
 ~100px, Stapel ~170px, Steuerleiste ~80px, Hand ~100px → ~500px Gesamt.
 
