@@ -100,23 +100,36 @@ export function App() {
               />
             </div>
 
-            <button
-              type="button"
-              disabled={!playerName.trim() || isCreatingRoom}
-              onClick={handleCreateRoom}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-base shadow-lg transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:scale-102 flex items-center justify-center gap-2"
-            >
-              <Sparkles className="w-5 h-5" />
-              <span>{isCreatingRoom ? 'Erstelle Raum...' : 'Neues Spiel erstellen'}</span>
-            </button>
+            {roomCode === null ? (
+              <>
+                <button
+                  type="button"
+                  disabled={!playerName.trim() || isCreatingRoom}
+                  onClick={handleCreateRoom}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-base shadow-lg transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:scale-102 flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span>{isCreatingRoom ? 'Erstelle Raum...' : 'Neues Spiel erstellen'}</span>
+                </button>
 
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-slate-800"></div>
-              <span className="flex-shrink mx-4 text-xs font-extrabold uppercase text-slate-500">
-                Oder beitreten
-              </span>
-              <div className="flex-grow border-t border-slate-800"></div>
-            </div>
+                <div className="relative flex py-2 items-center">
+                  <div className="flex-grow border-t border-slate-800"></div>
+                  <span className="flex-shrink mx-4 text-xs font-extrabold uppercase text-slate-500">
+                    Oder beitreten
+                  </span>
+                  <div className="flex-grow border-t border-slate-800"></div>
+                </div>
+              </>
+            ) : (
+              <div className="w-full p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-center">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                  Einladung zum Raum
+                </span>
+                <div className="text-2xl font-black tracking-widest text-emerald-400">
+                  {roomCode}
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleJoinRoom} className="space-y-3">
               <div>

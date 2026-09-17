@@ -49,6 +49,8 @@ test('Einladungslink füllt ohne gespeicherten Namen das Beitrittsformular vor',
     const code = await createRoomAs(alice, 'Invite-A');
     await bob.goto(`/?room=${code}`);
     await expect(bob.getByLabel('Raum-Code')).toHaveValue(code);
+    await expect(bob.getByRole('button', { name: 'Neues Spiel erstellen' })).toBeHidden();
+    await expect(bob.getByText('Einladung zum Raum')).toBeVisible();
     await bob.getByLabel('Dein Spielername').fill('Invite-B');
     await bob.getByRole('button', { name: 'Raum beitreten' }).click();
     await expect(bob.getByTestId('room-code')).toHaveText(code);
