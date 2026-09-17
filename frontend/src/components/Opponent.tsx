@@ -13,7 +13,7 @@ export const Opponent: React.FC<OpponentProps> = ({ opponent }) => {
 
   return (
     <div
-      className={`relative flex flex-col items-center p-2.5 sm:p-3 rounded-2xl transition-all duration-200 border ${
+      className={`relative flex flex-col items-center p-2 sm:p-3 rounded-2xl transition-all duration-200 border ${
         opponent.isTurn
           ? 'bg-amber-500/15 border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)] scale-105'
           : isFolded
@@ -59,7 +59,7 @@ export const Opponent: React.FC<OpponentProps> = ({ opponent }) => {
         {opponent.cardCount === 0 ? (
           <span className="text-xs text-slate-400 italic">Keine Handkarten</span>
         ) : (
-          <div className="flex -space-x-4 sm:-space-x-5">
+          <div className="opponent-fan flex -space-x-4 sm:-space-x-5">
             {Array.from({ length: Math.min(opponent.cardCount, 8) }).map((_, idx) => (
               <div
                 key={idx}

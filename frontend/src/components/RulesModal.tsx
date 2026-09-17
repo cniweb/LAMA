@@ -26,7 +26,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           type="button"
           onClick={onClose}
           aria-label="Regeln schließen"
-          className="absolute top-5 right-5 p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition cursor-pointer"
+          className="absolute top-5 right-5 p-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>

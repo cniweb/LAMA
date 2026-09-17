@@ -34,3 +34,11 @@
     transition-duration: 0.01ms;
   }
 }
+
+/* Mobile: Gegner-Fächer auf 4 verdeckte Karten begrenzen (Deko only —
+   die echte Anzahl steht im Zähler darunter). */
+@media (max-width: 639px) {
+  .opponent-fan > *:nth-child(n + 5) {
+    display: none;
+  }
+}

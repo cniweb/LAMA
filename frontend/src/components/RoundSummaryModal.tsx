@@ -103,7 +103,7 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
                   type="button"
                   onClick={() => onDiscardChip('black')}
                   data-testid="discard-black-chip"
-                  className="px-4 py-2 rounded-xl bg-slate-950 border-2 border-amber-400 text-amber-300 font-black text-sm flex items-center gap-2 shadow-lg hover:scale-105 transition-all cursor-pointer"
+                  className="px-4 py-2 min-h-[44px] rounded-xl bg-slate-950 border-2 border-amber-400 text-amber-300 font-black text-sm flex items-center gap-2 shadow-lg hover:scale-105 transition-all cursor-pointer"
                 >
                   <span className="w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-xs">
                     10
@@ -116,7 +116,7 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
                   type="button"
                   onClick={() => onDiscardChip('white')}
                   data-testid="discard-white-chip"
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-950 font-black text-sm flex items-center gap-2 shadow-lg hover:scale-105 transition-all cursor-pointer"
+                  className="px-4 py-2 min-h-[44px] rounded-xl bg-slate-100 text-slate-950 font-black text-sm flex items-center gap-2 shadow-lg hover:scale-105 transition-all cursor-pointer"
                 >
                   <span className="w-5 h-5 rounded-full bg-slate-200 border border-slate-400 flex items-center justify-center text-xs">
                     1

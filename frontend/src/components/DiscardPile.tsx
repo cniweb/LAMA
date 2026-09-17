@@ -23,7 +23,7 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
   onDrawCard,
 }) => {
   return (
-    <div className="flex items-center justify-center gap-6 sm:gap-12 my-auto py-2">
+    <div className="flex items-center justify-center gap-4 sm:gap-12 my-auto py-1 sm:py-2">
       {/* Draw Pile (Nachziehstapel) */}
       <div className="flex flex-col items-center">
         <div className="relative group">
@@ -41,15 +41,15 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
               {/* Stack effect */}
               {drawPileCount > 2 && (
                 <div className="absolute top-1 left-1 pointer-events-none opacity-50">
-                  <Card faceDown size="lg" />
+                  <Card faceDown size="md" className="sm:w-28 sm:h-44 sm:text-4xl sm:rounded-2xl" />
                 </div>
               )}
               {drawPileCount > 1 && (
                 <div className="absolute top-0.5 left-0.5 pointer-events-none opacity-80">
-                  <Card faceDown size="lg" />
+                  <Card faceDown size="md" className="sm:w-28 sm:h-44 sm:text-4xl sm:rounded-2xl" />
                 </div>
               )}
-              <Card faceDown size="lg" />
+              <Card faceDown size="md" className="sm:w-28 sm:h-44 sm:text-4xl sm:rounded-2xl" />
 
               {/* Draw Pile Count Badge */}
               <div className="absolute -bottom-2.5 inset-x-0 mx-auto w-max px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-700 text-slate-200 text-xs font-black shadow-md">
@@ -57,7 +57,7 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
               </div>
             </button>
           ) : (
-            <div className="w-24 h-36 sm:w-28 sm:h-44 rounded-2xl border-2 border-dashed border-slate-700/60 flex flex-col items-center justify-center text-slate-500 font-bold text-xs p-2 text-center">
+            <div className="w-16 h-24 sm:w-28 sm:h-44 rounded-2xl border-2 border-dashed border-slate-700/60 flex flex-col items-center justify-center text-slate-500 font-bold text-xs p-2 text-center">
               <Layers className="w-6 h-6 mb-1 opacity-50" />
               <span>Nachziehstapel leer</span>
             </div>
@@ -69,7 +69,7 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
             Nachziehstapel
           </span>
           {isMyTurn && isSoloEndspurt && (
-            <span className="text-[11px] font-extrabold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded mt-1">
+            <span className="hidden sm:inline text-[11px] font-extrabold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded mt-1">
               Im Solo-Endspurt gesperrt
             </span>
           )}
@@ -82,14 +82,18 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
           {/* Subtle stack effect */}
           {discardPileCount > 1 && (
             <div className="absolute top-1 -left-1 pointer-events-none opacity-40 rotate-[-4deg]">
-              <Card faceDown size="lg" />
+              <Card faceDown size="md" className="sm:w-28 sm:h-44 sm:text-4xl sm:rounded-2xl" />
             </div>
           )}
 
           {topDiscardCard !== null ? (
-            <Card value={topDiscardCard} size="lg" />
+            <Card
+              value={topDiscardCard}
+              size="md"
+              className="sm:w-28 sm:h-44 sm:text-4xl sm:rounded-2xl"
+            />
           ) : (
-            <div className="w-24 h-36 sm:w-28 sm:h-44 rounded-2xl border-2 border-dashed border-slate-700/60 flex items-center justify-center text-slate-500 font-bold text-xs">
+            <div className="w-16 h-24 sm:w-28 sm:h-44 rounded-2xl border-2 border-dashed border-slate-700/60 flex items-center justify-center text-slate-500 font-bold text-xs">
               Ablage
             </div>
           )}

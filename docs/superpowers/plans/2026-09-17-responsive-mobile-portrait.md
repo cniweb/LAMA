@@ -48,9 +48,9 @@ Task 1 liefert den fehlschlagenden Test (TDD). Die Tasks 2–6 machen ihn Schrit
 Erstelle `frontend/e2e/mobile-portrait.spec.ts` mit exakt diesem Inhalt:
 
 ```ts
-import { devices, expect, type Browser, type Page, test } from '@playwright/test';
+import { type Browser, devices, expect, type Page, test } from '@playwright/test';
 
-const MOBILE = { ...devices['Pixel 7'] };
+const MOBILE = { ...devices['Pixel 7'], viewport: { width: 360, height: 640 } };
 const ROOM_CODE_PATTERN = /^[A-HJ-NP-Z2-9]{4}$/;
 
 async function expectNoVerticalScroll(page: Page, label: string): Promise<void> {
@@ -79,7 +79,11 @@ async function joinRoomAs(page: Page, playerName: string, roomCode: string): Pro
   await expect(page.getByTestId('room-code')).toHaveText(roomCode);
 }
 
-test('Spiel-Screen passt ohne Scroll auf 360px-Breite', async ({ browser }: { browser: Browser }) => {
+test('Spiel-Screen passt ohne Scroll auf 360px-Breite', async ({
+  browser,
+}: {
+  browser: Browser;
+}) => {
   const ctxA = await browser.newContext(MOBILE);
   const ctxB = await browser.newContext(MOBILE);
   const alice = await ctxA.newPage();
@@ -562,6 +566,144 @@ Expected: beide PASS (Modal-A11y unverändert, Touch-Targets größer).
 ```bash
 DEVELOPER_DIR=/Library/Developer/CommandLineTools git add frontend/src/App.tsx frontend/src/components/PlayerHand.tsx frontend/src/components/RulesModal.tsx frontend/src/components/RoundSummaryModal.tsx
 DEVELOPER_DIR=/Library/Developer/CommandLineTools git commit -m "feat(responsive): dvh viewport, safe-area insets, 44px touch targets"
+```
+
+---
+
+### Task 6b: Solo-Endspurt-Reserve (54px)
+
+**Hintergrund:** Im Solo-Endspurt (alle anderen ausgestiegen) kommen auf Mobile
+Banner (~30px) + „gesperrt“-Label (~24px) hinzu → `main` 575→629px, Overflow
+auf 640px-Screens. Der `mobile-portrait`-Lauf flakt dadurch (adaptiver Tap =
+Aussteigen). Das Label dupliziert die Banner-Aussage (gleiche Bedingung
+`isMyTurn && isSoloEndspurt`), daher wird es auf Mobile ausgeblendet; der Rest
+ist reine Spacing-Reserve — alle Änderungen nur unterhalb `sm:`.
+
+**Files:**
+- Modify: `frontend/src/components/DiscardPile.tsx`
+- Modify: `frontend/src/components/PlayerHand.tsx`
+- Modify: `frontend/src/App.tsx`
+- Modify: `frontend/e2e/mobile-portrait.spec.ts` (deterministischer Solo-Test)
+- Delete: `frontend/e2e/debug-heights.spec.ts` (nur Diagnose)
+- Test: `frontend/e2e/mobile-portrait.spec.ts` mit `--repeat-each=4`
+
+**Interfaces:**
+- Consumes: Klassen aus Tasks 2–6 (exakte oldStrings unten).
+- Produces: Solo-State passt auf 360×640.
+
+- [ ] **Step 1: Duplikat-Label auf Mobile ausblenden (`DiscardPile.tsx`)**
+
+`oldString`:
+```tsx
+            <span className="text-[11px] font-extrabold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded mt-1">
+              Im Solo-Endspurt gesperrt
+            </span>
+```
+`newString`:
+```tsx
+            <span className="hidden sm:inline text-[11px] font-extrabold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded mt-1">
+              Im Solo-Endspurt gesperrt
+            </span>
+```
+
+- [ ] **Step 2: Solo-Banner kompakt auf Mobile (`PlayerHand.tsx`)**
+
+`oldString`:
+```tsx
+        <div className="text-xs font-extrabold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-bounce">
+```
+`newString`:
+```tsx
+        <div className="text-[11px] sm:text-xs font-extrabold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-bounce">
+```
+
+- [ ] **Step 3: Spacing-Reserven (jeweils nur Mobile-Basis, `sm:` unverändert)**
+
+`DiscardPile.tsx`:
+`oldString`: `<div className="flex items-center justify-center gap-4 sm:gap-12 my-auto py-2">`
+`newString`: `<div className="flex items-center justify-center gap-4 sm:gap-12 my-auto py-1 sm:py-2">`
+
+`App.tsx` (Gegner-Zeile):
+`oldString`: `<div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-2">`
+`newString`: `<div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-1 sm:pt-2">`
+
+`App.tsx` (Header):
+`oldString`: `pt-[max(0.625rem,env(safe-area-inset-top))] pb-2.5 bg-slate-950/80`
+`newString`: `pt-[max(0.625rem,env(safe-area-inset-top))] pb-1.5 sm:pb-2.5 bg-slate-950/80`
+
+`PlayerHand.tsx` (Steuerkopf):
+`oldString`: `<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between`
+`newString`: `<div className="flex flex-col gap-1 sm:gap-2 sm:flex-row sm:items-center sm:justify-between`
+
+`PlayerHand.tsx` (Hand-Fächer):
+`oldString`: `className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-2 px-2 max-w-4xl min-h-[110px] sm:min-h-[140px]"`
+`newString`: `className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-1 sm:py-2 px-2 max-w-4xl min-h-[92px] sm:min-h-[140px]"` (Controller-Nachschlag: Inhalt nur ~84px, spart 18px für die Solo-Reserve)
+- [ ] **Step 4: Deterministischen Solo-Test anhängen (`mobile-portrait.spec.ts`)**
+
+Ans Dateiende anhängen (bestehende Helper wiederverwenden):
+
+```ts
+test('Solo-Endspurt passt ohne Scroll auf 360px-Breite', async ({
+  browser,
+}: {
+  browser: Browser;
+}) => {
+  const ctxA = await browser.newContext(MOBILE);
+  const ctxB = await browser.newContext(MOBILE);
+  const alice = await ctxA.newPage();
+  const bob = await ctxB.newPage();
+  try {
+    const code = await createRoomAs(alice, 'Solo-A');
+    await joinRoomAs(bob, 'Solo-B', code);
+    await alice.getByTestId('start-game-button').click();
+    await expect(alice.getByTestId('player-hand')).toBeVisible();
+    await expect(bob.getByTestId('player-hand')).toBeVisible();
+
+    // Wer am Zug ist, steigt aus → Gegenseite ist im Solo-Endspurt
+    // (Banner + gesperrte Stapel — der höchste Spiel-Screen).
+    const active = (await alice.getByTestId('turn-indicator').isVisible()) ? alice : bob;
+    const idle = active === alice ? bob : alice;
+    await active.getByTestId('fold-button').click({ timeout: 5_000 });
+    await active.waitForTimeout(1500);
+    await expectNoVerticalScroll(active, 'solo-active');
+    await expectNoVerticalScroll(idle, 'solo-idle');
+  } finally {
+    await ctxA.close();
+    await ctxB.close();
+  }
+});
+```
+
+- [ ] **Step 5: Diagnose-Spec löschen**
+
+```bash
+rm frontend/e2e/debug-heights.spec.ts
+```
+
+- [ ] **Step 6: Run lint + build**
+
+```bash
+npm run lint
+npm run build --workspace=frontend
+```
+
+Expected: beides grün.
+
+- [ ] **Step 7: Run mobile spec mehrfach + Desktop-Parität**
+
+```bash
+npm run test:e2e --workspace=frontend -- mobile-portrait --repeat-each=4
+npm run test:e2e --workspace=frontend -- round-flow
+npm run test:e2e --workspace=frontend -- accessibility
+```
+
+Expected: alles PASS (Solo-Test deterministisch grün, adaptiver Test ohne Flake über 4 Läufe).
+
+- [ ] **Step 8: Commit**
+
+```bash
+DEVELOPER_DIR=/Library/Developer/CommandLineTools git add frontend/src/components/DiscardPile.tsx frontend/src/components/PlayerHand.tsx frontend/src/App.tsx frontend/e2e/mobile-portrait.spec.ts docs/superpowers/plans/2026-09-17-responsive-mobile-portrait.md
+DEVELOPER_DIR=/Library/Developer/CommandLineTools git commit -m "feat(responsive): solo-endspurt fits 360px viewport, deterministic solo e2e"
 ```
 
 ---

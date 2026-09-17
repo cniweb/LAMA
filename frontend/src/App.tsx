@@ -69,7 +69,7 @@ export function App() {
   // Welcome / Join Screen
   if (!hasJoined || !roomCode) {
     return (
-      <main className="min-h-screen w-full flex items-center justify-center p-4 felt-table">
+      <main className="min-h-dvh w-full flex items-center justify-center p-4 felt-table">
         <div className="w-full max-w-md p-6 sm:p-8 rounded-3xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-md flex flex-col items-center">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-4xl animate-bounce">🦙</span>
@@ -164,9 +164,9 @@ export function App() {
 
   // Active Game Room Screen
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between felt-table">
+    <div className="min-h-dvh w-full flex flex-col justify-between felt-table">
       {/* Top Navigation Bar */}
-      <header className="w-full px-4 py-2.5 bg-slate-950/80 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between z-30">
+      <header className="w-full px-4 pt-[max(0.625rem,env(safe-area-inset-top))] pb-1.5 sm:pb-2.5 bg-slate-950/80 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between z-30">
         <div className="flex items-center gap-3">
           <span className="text-xl">🦙</span>
           <div>
@@ -207,7 +207,7 @@ export function App() {
           <button
             type="button"
             onClick={() => setRulesOpen(true)}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition cursor-pointer"
+            className="p-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition cursor-pointer"
             title="Spielregeln ansehen"
           >
             <HelpCircle className="w-4 h-4" />
@@ -216,7 +216,7 @@ export function App() {
           <button
             type="button"
             onClick={handleLeaveRoom}
-            className="p-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition cursor-pointer"
+            className="p-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition cursor-pointer"
             title="Raum verlassen"
           >
             <LogOut className="w-4 h-4" />
@@ -255,7 +255,7 @@ export function App() {
                   })())}
           </div>
           {/* Opponents Row (Top) */}
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-1 sm:pt-2">
             {state.opponents.map((opp) => (
               <Opponent key={opp.id} opponent={opp} />
             ))}
