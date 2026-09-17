@@ -7,7 +7,7 @@ interface CardProps {
   faceDown?: boolean;
   playable?: boolean;
   disabled?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
   /** Stabile Alternative zu onClick: wird mit `value` aufgerufen (memo-freundlich). */
   onPlay?: (card: CardValue) => void;
@@ -45,6 +45,7 @@ export const Card: React.FC<CardProps> = memo(function Card({
 
   const interactive = playable && (onClick !== undefined || onPlay !== undefined);
   const sizeClasses = {
+    xs: 'w-12 h-[76px] text-lg rounded-lg border-2',
     sm: 'w-10 h-16 text-sm rounded-md border-2',
     md: 'w-16 h-24 sm:w-20 sm:h-32 text-xl sm:text-2xl rounded-xl border-3 sm:border-4',
     lg: 'w-24 h-36 sm:w-28 sm:h-44 text-3xl sm:text-4xl rounded-2xl border-4',

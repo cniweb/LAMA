@@ -118,8 +118,9 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                   value={card}
                   playable={isPlayable}
                   disabled={isTurn && !isPlayable}
-                  size="md"
+                  size="xs"
                   onPlay={onPlayCard}
+                  className="sm:w-20 sm:h-32 sm:text-2xl sm:rounded-xl sm:border-4"
                 />
               </div>
             );
