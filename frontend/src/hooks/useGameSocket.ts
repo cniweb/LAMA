@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 const SESSION_KEY = 'lama_session_id';
 const NAME_KEY = 'lama_player_name';
 
+const BASE_RECONNECT_MS = 1000;
+const MAX_RECONNECT_MS = 30_000;
+const RECONNECT_JITTER_MS = 500;
+
 export function getOrCreateSessionId(): string {
   let sid = localStorage.getItem(SESSION_KEY);
   if (!sid) {
@@ -29,13 +33,43 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
 
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectAttemptRef = useRef(0);
   const sessionIdRef = useRef<string>(getOrCreateSessionId());
+  const connectRef = useRef(() => {});
 
   const sendMessage = useCallback((msg: ClientMessage) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(msg));
     }
   }, []);
+
+  /**
+   * Plant einen Reconnect mit exponentiellem Backoff + Jitter (1s, 2s, 4s, …
+   * gedeckelt bei 30s). Im Hintergrund-Tab wird nichts geplant – das übernimmt
+   * der visibilitychange-Handler bei Rückkehr. Schont Akku und Serverbudget.
+   * Der Aufruf läuft über connectRef, damit kein Verwendungs-vor-Deklaration-
+   * Zyklus mit `connect` entsteht.
+   */
+  const scheduleReconnect = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    if (!roomCode || !playerName || document.hidden) {
+      return;
+    }
+    const backoff = Math.min(
+      MAX_RECONNECT_MS,
+      BASE_RECONNECT_MS * 2 ** Math.min(reconnectAttemptRef.current, 5)
+    );
+    reconnectAttemptRef.current += 1;
+    reconnectTimeoutRef.current = setTimeout(
+      () => {
+        connectRef.current();
+      },
+      backoff + Math.random() * RECONNECT_JITTER_MS
+    );
+  }, [roomCode, playerName]);
 
   const connect = useCallback(() => {
     if (!roomCode || !playerName) return;
@@ -50,6 +84,7 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
     socketRef.current = ws;
 
     ws.onopen = () => {
+      reconnectAttemptRef.current = 0;
       setIsConnected(true);
       setError(null);
     };
@@ -73,16 +108,17 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
 
     ws.onclose = () => {
       setIsConnected(false);
-      // Auto-reconnect after 2 seconds
-      reconnectTimeoutRef.current = setTimeout(() => {
-        connect();
-      }, 2000);
+      scheduleReconnect();
     };
 
     ws.onerror = () => {
       setError('Verbindung zum Server unterbrochen.');
     };
-  }, [roomCode, playerName]);
+  }, [roomCode, playerName, scheduleReconnect]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  });
 
   useEffect(() => {
     connect();
@@ -96,6 +132,28 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
       }
     };
   }, [connect]);
+
+  connectRef.current = connect;
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+        return;
+      }
+      if (socketRef.current?.readyState !== WebSocket.OPEN) {
+        reconnectAttemptRef.current = 0;
+        scheduleReconnect();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [scheduleReconnect]);
 
   // Actions
   const startGame = useCallback(() => sendMessage({ type: 'START_GAME' }), [sendMessage]);

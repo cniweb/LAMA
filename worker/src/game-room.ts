@@ -2,13 +2,17 @@ import { DurableObject } from 'cloudflare:workers';
 import {
   addPlayerToRoom,
   type ClientMessage,
+  consumeRateLimitToken,
   createInitialGameState,
   discardBonusChip,
   drawCard,
   filterStateForClient,
   foldPlayer,
   type GameState,
+  isRoomExpired,
+  MAX_MESSAGE_BYTES,
   playCard,
+  ROOM_TTL_MS,
   type ServerMessage,
   startRound,
 } from '@lama/shared';
@@ -35,9 +39,16 @@ export class GameRoom extends DurableObject<Env> {
         updated_at INTEGER NOT NULL
       )
     `);
+    this.ctx.storage.sql.exec(`
+      CREATE TABLE IF NOT EXISTS rate_limits (
+        session_id TEXT PRIMARY KEY,
+        tokens REAL NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    `);
   }
 
-  private loadState(roomCode: string, hostId: string): GameState {
+  private async loadState(roomCode: string, hostId: string): Promise<GameState> {
     if (this.stateCache) {
       return this.stateCache;
     }
@@ -54,17 +65,73 @@ export class GameRoom extends DurableObject<Env> {
     }
 
     const newState = createInitialGameState(roomCode, hostId);
-    this.saveState(newState);
+    await this.saveState(newState);
     return newState;
   }
 
-  private saveState(state: GameState): void {
+  private async saveState(state: GameState): Promise<void> {
     this.stateCache = state;
     this.ctx.storage.sql.exec(
       "INSERT OR REPLACE INTO game_store (id, data, updated_at) VALUES ('state', ?, ?)",
       JSON.stringify(state),
       Date.now()
     );
+    // Inaktivitäts-Timeout neu starten: Der Alarm löscht den Raum, wenn bis
+    // dahin keine weitere Aktivität stattgefunden hat.
+    await this.ctx.storage.setAlarm(Date.now() + ROOM_TTL_MS);
+  }
+
+  /**
+   * Löscht den Raum (inkl. Rate-Limit-Zähler), wenn seit der letzten
+   * Aktivität mehr als ROOM_TTL_MS vergangen ist. Schützt das
+   * Free-Tier-Storage-Kontingent vor verwaisten Räumen.
+   */
+  async alarm(): Promise<void> {
+    const cursor = this.ctx.storage.sql.exec(
+      "SELECT updated_at FROM game_store WHERE id = 'state'"
+    );
+    const rows = [...cursor];
+    if (rows.length === 0) {
+      return;
+    }
+    const updatedAt = rows[0].updated_at as number;
+    const now = Date.now();
+    if (!isRoomExpired(updatedAt, now)) {
+      await this.ctx.storage.setAlarm(updatedAt + ROOM_TTL_MS);
+      return;
+    }
+    this.ctx.storage.sql.exec("DELETE FROM game_store WHERE id = 'state'");
+    this.ctx.storage.sql.exec('DELETE FROM rate_limits');
+    this.stateCache = null;
+    for (const ws of this.ctx.getWebSockets()) {
+      try {
+        ws.close(1000, 'Der Raum wurde wegen Inaktivität geschlossen.');
+      } catch {
+        // Bereits geschlossene Sockets ignorieren.
+      }
+    }
+  }
+
+  /** Token-Bucket-Limit pro Spieler (hibernationssicher in SQLite). */
+  private checkRateLimit(sessionId: string): boolean {
+    const now = Date.now();
+    const cursor = this.ctx.storage.sql.exec(
+      'SELECT tokens, updated_at FROM rate_limits WHERE session_id = ?',
+      sessionId
+    );
+    const rows = [...cursor];
+    const stored =
+      rows.length > 0
+        ? { tokens: rows[0].tokens as number, updatedAt: rows[0].updated_at as number }
+        : null;
+    const { allowed, bucket } = consumeRateLimitToken(stored, now);
+    this.ctx.storage.sql.exec(
+      'INSERT OR REPLACE INTO rate_limits (session_id, tokens, updated_at) VALUES (?, ?, ?)',
+      sessionId,
+      bucket.tokens,
+      bucket.updatedAt
+    );
+    return allowed;
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -88,12 +155,12 @@ export class GameRoom extends DurableObject<Env> {
       serverWs.serializeAttachment({ sessionId, playerName });
 
       // Load or initialize room state
-      const state = this.loadState(roomCode, sessionId);
+      const state = await this.loadState(roomCode, sessionId);
 
       // Add/Re-add player to room state
       try {
         const updatedState = addPlayerToRoom(state, sessionId, playerName);
-        this.saveState(updatedState);
+        await this.saveState(updatedState);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Fehler beim Beitritt';
         serverWs.send(JSON.stringify({ type: 'ERROR', message: msg } satisfies ServerMessage));
@@ -121,6 +188,11 @@ export class GameRoom extends DurableObject<Env> {
       return;
     }
 
+    if (rawData.length > MAX_MESSAGE_BYTES) {
+      this.sendError(ws, 'Nachricht zu groß.');
+      return;
+    }
+
     let clientMsg: ClientMessage;
     try {
       clientMsg = JSON.parse(rawData);
@@ -129,7 +201,12 @@ export class GameRoom extends DurableObject<Env> {
       return;
     }
 
-    const state = this.loadState('LAMA', sessionId);
+    if (!this.checkRateLimit(sessionId)) {
+      this.sendError(ws, 'Zu viele Anfragen – bitte kurz warten.');
+      return;
+    }
+
+    const state = await this.loadState('LAMA', sessionId);
 
     try {
       let nextState = state;
@@ -193,7 +270,7 @@ export class GameRoom extends DurableObject<Env> {
           throw new Error('Unbekannte Aktion.');
       }
 
-      this.saveState(nextState);
+      await this.saveState(nextState);
       this.broadcastState();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Aktion fehlgeschlagen';
@@ -210,7 +287,7 @@ export class GameRoom extends DurableObject<Env> {
       const activeSockets = this.ctx.getWebSockets(sessionId);
       if (activeSockets.length <= 1) {
         this.stateCache.players[sessionId].connected = false;
-        this.saveState(this.stateCache);
+        await this.saveState(this.stateCache);
         this.broadcastState();
       }
     }
