@@ -88,3 +88,13 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
   * *Erkenntnis:* Im Root-Build-Script (`package.json`) muss die Reihenfolge zwingend eingehalten werden:
     `npm run build --workspace=shared && npm run build --workspace=frontend && npm run build --workspace=worker`
   * Erst wenn `frontend/dist` existiert, kann Wrangler die Assets validieren und deployen.
+
+### 6.5 Dependabot-Interdependenzen (Vite 8 & @vitejs/plugin-react 6)
+* **Breaking Change bei isoliertem Merge:**
+  * *Stolperstein:* `@vitejs/plugin-react@6.x` besitzt eine strikte PeerDependency auf `vite@^8.0.0`. Wird der Plugin-React-PR isoliert auf einem Vite-6-Stand gemergt, schlägt der Build mit `ERR_PACKAGE_PATH_NOT_EXPORTED` ('./internal') fehl.
+  * *Lösung:* Vite-Major-Updates (PR 1) immer vor oder gemeinsam mit abhängigen Plugins (PR 3) mergen. In Kombination baut Vite 8 mit Rolldown-Integration in Rekordzeit (~260 ms) und ohne Warnungen.
+
+### 6.6 TypeScript 7 Side-Effect Asset Imports (TS2882)
+* **Striktere CSS/Asset-Typisierung:**
+  * *Stolperstein:* TypeScript 7 verlangt Typdeklarationen für Side-Effect-CSS-Imports (`import './index.css'`). Fehlen diese, bricht `tsc -b` mit `error TS2882: Cannot find module or type declarations for side-effect import of './index.css'` ab.
+  * *Best Practice:* In jedem Vite-Projekt zwingend `frontend/src/vite-env.d.ts` mit `/// <reference types="vite/client" />` anlegen, damit TypeScript 7 alle Vite-Asset-Typen standardkonform auflöst.
