@@ -23,7 +23,7 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
   onDrawCard,
 }) => {
   return (
-    <div className="flex items-center justify-center gap-4 sm:gap-12 my-auto py-2">
+    <div className="flex items-center justify-center gap-4 sm:gap-12 my-auto py-1 sm:py-2">
       {/* Draw Pile (Nachziehstapel) */}
       <div className="flex flex-col items-center">
         <div className="relative group">
@@ -69,7 +69,7 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
             Nachziehstapel
           </span>
           {isMyTurn && isSoloEndspurt && (
-            <span className="text-[11px] font-extrabold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded mt-1">
+            <span className="hidden sm:inline text-[11px] font-extrabold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded mt-1">
               Im Solo-Endspurt gesperrt
             </span>
           )}

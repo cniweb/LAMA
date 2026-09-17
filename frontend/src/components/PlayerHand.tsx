@@ -38,7 +38,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   return (
     <div className="w-full flex flex-col items-center gap-3 pb-[env(safe-area-inset-bottom)]">
       {/* Turn Action Controls Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full max-w-2xl px-3 sm:px-4 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm">
+      <div className="flex flex-col gap-1 sm:gap-2 sm:flex-row sm:items-center sm:justify-between w-full max-w-2xl px-3 sm:px-4 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <span className="text-xs sm:text-sm font-extrabold text-slate-300">Deine Chips:</span>
           <ChipDisplay chips={chips} totalScore={totalScore} size="sm" />
@@ -88,7 +88,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 
       {/* Solo Endspurt Notice */}
       {isTurn && isSoloEndspurt && (
-        <div className="text-xs font-extrabold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-bounce">
+        <div className="text-[11px] sm:text-xs font-extrabold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-bounce">
           ⚡ Solo-Endspurt! Alle anderen sind ausgestiegen. Du darfst nicht mehr nachziehen!
         </div>
       )}
@@ -96,7 +96,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       {/* Hand Cards Fan */}
       <div
         data-testid="player-hand"
-        className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-2 px-2 max-w-4xl min-h-[110px] sm:min-h-[140px]"
+        className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-1 sm:py-2 px-2 max-w-4xl min-h-[92px] sm:min-h-[140px]"
       >
         {isFolded ? (
           <div className="flex flex-col items-center justify-center p-4 rounded-xl border border-dashed border-slate-700/60 bg-slate-900/40 text-slate-400">

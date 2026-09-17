@@ -166,7 +166,7 @@ export function App() {
   return (
     <div className="min-h-dvh w-full flex flex-col justify-between felt-table">
       {/* Top Navigation Bar */}
-      <header className="w-full px-4 pt-[max(0.625rem,env(safe-area-inset-top))] pb-2.5 bg-slate-950/80 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between z-30">
+      <header className="w-full px-4 pt-[max(0.625rem,env(safe-area-inset-top))] pb-1.5 sm:pb-2.5 bg-slate-950/80 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between z-30">
         <div className="flex items-center gap-3">
           <span className="text-xl">🦙</span>
           <div>
@@ -255,7 +255,7 @@ export function App() {
                   })())}
           </div>
           {/* Opponents Row (Top) */}
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-1 sm:pt-2">
             {state.opponents.map((opp) => (
               <Opponent key={opp.id} opponent={opp} />
             ))}

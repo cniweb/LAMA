@@ -68,3 +68,33 @@ test('Spiel-Screen passt ohne Scroll auf 360px-Breite', async ({
     await ctxB.close();
   }
 });
+
+test('Solo-Endspurt passt ohne Scroll auf 360px-Breite', async ({
+  browser,
+}: {
+  browser: Browser;
+}) => {
+  const ctxA = await browser.newContext(MOBILE);
+  const ctxB = await browser.newContext(MOBILE);
+  const alice = await ctxA.newPage();
+  const bob = await ctxB.newPage();
+  try {
+    const code = await createRoomAs(alice, 'Solo-A');
+    await joinRoomAs(bob, 'Solo-B', code);
+    await alice.getByTestId('start-game-button').click();
+    await expect(alice.getByTestId('player-hand')).toBeVisible();
+    await expect(bob.getByTestId('player-hand')).toBeVisible();
+
+    // Wer am Zug ist, steigt aus → Gegenseite ist im Solo-Endspurt
+    // (Banner + gesperrte Stapel — der höchste Spiel-Screen).
+    const active = (await alice.getByTestId('turn-indicator').isVisible()) ? alice : bob;
+    const idle = active === alice ? bob : alice;
+    await active.getByTestId('fold-button').click({ timeout: 5_000 });
+    await active.waitForTimeout(1500);
+    await expectNoVerticalScroll(active, 'solo-active');
+    await expectNoVerticalScroll(idle, 'solo-idle');
+  } finally {
+    await ctxA.close();
+    await ctxB.close();
+  }
+});
