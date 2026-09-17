@@ -179,3 +179,5 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
     </div>
   );
 };
+
+export default RoundSummaryModal;

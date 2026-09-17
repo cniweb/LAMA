@@ -1,12 +1,15 @@
 import { HelpCircle, LogOut, Sparkles, Wifi, WifiOff } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { DiscardPile } from './components/DiscardPile.js';
 import { LobbyView } from './components/LobbyView.js';
 import { Opponent } from './components/Opponent.js';
 import { PlayerHand } from './components/PlayerHand.js';
-import { RoundSummaryModal } from './components/RoundSummaryModal.js';
-import { RulesModal } from './components/RulesModal.js';
 import { getSavedPlayerName, savePlayerName, useGameSocket } from './hooks/useGameSocket.js';
+
+// Schwergewichtige Modals erst bei Bedarf laden (RoundSummaryModal zieht
+// canvas-confetti in einen separaten Chunk statt in den Initial-Load).
+const RulesModal = lazy(() => import('./components/RulesModal.js'));
+const RoundSummaryModal = lazy(() => import('./components/RoundSummaryModal.js'));
 
 export function App() {
   const [roomCode, setRoomCode] = useState<string | null>(() => {
@@ -152,7 +155,9 @@ export function App() {
           </button>
         </div>
 
-        <RulesModal isOpen={rulesOpen} onClose={() => setRulesOpen(false)} />
+        <Suspense fallback={null}>
+          <RulesModal isOpen={rulesOpen} onClose={() => setRulesOpen(false)} />
+        </Suspense>
       </main>
     );
   }
@@ -274,11 +279,13 @@ export function App() {
           />
 
           {/* Round Summary & Chip Discard Modal */}
-          <RoundSummaryModal
-            state={state}
-            onDiscardChip={actions.discardChip}
-            onNextRound={actions.nextRound}
-          />
+          <Suspense fallback={null}>
+            <RoundSummaryModal
+              state={state}
+              onDiscardChip={actions.discardChip}
+              onNextRound={actions.nextRound}
+            />
+          </Suspense>
         </main>
       ) : (
         <div className="flex-1 flex items-center justify-center text-slate-400 font-bold text-sm">
@@ -287,7 +294,9 @@ export function App() {
       )}
 
       {/* Rules Modal */}
-      <RulesModal isOpen={rulesOpen} onClose={() => setRulesOpen(false)} />
+      <Suspense fallback={null}>
+        <RulesModal isOpen={rulesOpen} onClose={() => setRulesOpen(false)} />
+      </Suspense>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { CardValue } from '@lama/shared';
 import type React from 'react';
+import { memo, useCallback } from 'react';
 
 interface CardProps {
   value?: CardValue;
@@ -8,6 +9,8 @@ interface CardProps {
   disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
   onClick?: () => void;
+  /** Stabile Alternative zu onClick: wird mit `value` aufgerufen (memo-freundlich). */
+  onPlay?: (card: CardValue) => void;
   className?: string;
 }
 
@@ -22,15 +25,25 @@ const CARD_STYLES: Record<CardValue, { bg: string; text: string; border: string;
     L: { bg: 'bg-amber-300', text: 'text-amber-950', border: 'border-amber-500', label: '🦙' },
   };
 
-export const Card: React.FC<CardProps> = ({
+export const Card: React.FC<CardProps> = memo(function Card({
   value,
   faceDown = false,
   playable = false,
   disabled = false,
   size = 'md',
   onClick,
+  onPlay,
   className = '',
-}) => {
+}) {
+  const handleClick = useCallback(() => {
+    if (onClick) {
+      onClick();
+    } else if (value !== undefined) {
+      onPlay?.(value);
+    }
+  }, [onClick, onPlay, value]);
+
+  const interactive = playable && (onClick !== undefined || onPlay !== undefined);
   const sizeClasses = {
     sm: 'w-10 h-16 text-sm rounded-md border-2',
     md: 'w-16 h-24 sm:w-20 sm:h-32 text-xl sm:text-2xl rounded-xl border-3 sm:border-4',
@@ -56,8 +69,8 @@ export const Card: React.FC<CardProps> = ({
   return (
     <button
       type="button"
-      disabled={disabled || (!playable && onClick === undefined)}
-      onClick={playable && onClick ? onClick : undefined}
+      disabled={disabled || !interactive}
+      onClick={interactive ? handleClick : undefined}
       className={`relative select-none font-black flex flex-col justify-between p-1.5 sm:p-2.5 shadow-lg transition-all duration-150 ${style.bg} ${style.text} ${style.border} ${sizeClasses} ${
         playable ? 'card-playable cursor-pointer' : ''
       } ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${className}`}
@@ -87,4 +100,4 @@ export const Card: React.FC<CardProps> = ({
       </div>
     </button>
   );
-};
+});

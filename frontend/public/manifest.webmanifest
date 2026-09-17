@@ -1,0 +1,20 @@
+{
+  "name": "LAMA – Leg alle Minuspunkte ab!",
+  "short_name": "LAMA",
+  "description": "Online-Kartenspiel für 2–6 Spieler direkt im Browser.",
+  "lang": "de",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
