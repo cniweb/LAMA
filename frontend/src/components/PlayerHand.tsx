@@ -38,7 +38,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   return (
     <div className="w-full flex flex-col items-center gap-3">
       {/* Turn Action Controls Header */}
-      <div className="flex items-center justify-between w-full max-w-2xl px-4 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full max-w-2xl px-3 sm:px-4 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <span className="text-xs sm:text-sm font-extrabold text-slate-300">Deine Chips:</span>
           <ChipDisplay chips={chips} totalScore={totalScore} size="sm" />
@@ -57,7 +57,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 type="button"
                 onClick={onFold}
                 data-testid="fold-button"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-rose-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105"
+                className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg bg-rose-600/80 hover:bg-rose-600 text-rose-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105"
                 title="Aus dem Durchgang aussteigen und aktuelle Handkarten verdeckt sichern"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -69,7 +69,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 type="button"
                 onClick={onDrawCard}
                 data-testid="draw-button"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-blue-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105"
+                className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg bg-blue-600/80 hover:bg-blue-600 text-blue-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105"
                 title="1 Karte vom Nachziehstapel ziehen"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
