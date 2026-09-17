@@ -1,5 +1,6 @@
 import { HelpCircle, X } from 'lucide-react';
 import type React from 'react';
+import { useModalDialog } from '../hooks/useModalDialog.js';
 
 interface RulesModalProps {
   isOpen: boolean;
@@ -7,14 +8,24 @@ interface RulesModalProps {
 }
 
 export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
+  const dialogRef = useModalDialog<HTMLDivElement>(isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rules-modal-title"
+      ref={dialogRef}
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto"
+    >
       <div className="relative w-full max-w-xl bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
         <button
           type="button"
           onClick={onClose}
+          aria-label="Regeln schließen"
           className="absolute top-5 right-5 p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition cursor-pointer"
         >
           <X className="w-5 h-5" />
@@ -22,7 +33,9 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
 
         <div className="flex items-center gap-2 mb-4">
           <HelpCircle className="w-6 h-6 text-amber-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-amber-400">LAMA Spielregeln</h2>
+          <h2 id="rules-modal-title" className="text-xl sm:text-2xl font-black text-amber-400">
+            LAMA Spielregeln
+          </h2>
         </div>
 
         <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">

@@ -244,6 +244,16 @@ export function App() {
         </main>
       ) : state ? (
         <main className="flex-1 flex flex-col justify-between p-2 sm:p-4 max-w-6xl mx-auto w-full">
+          {/* Screenreader-Ansage für Zugwechsel und Hinweise */}
+          <div aria-live="polite" role="status" className="sr-only">
+            {notification?.text ??
+              (state.myPlayer.isTurn
+                ? 'Du bist am Zug!'
+                : (() => {
+                    const active = state.opponents.find((opp) => opp.isTurn);
+                    return active ? `${active.name} ist am Zug.` : 'Warte auf Mitspieler...';
+                  })())}
+          </div>
           {/* Opponents Row (Top) */}
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-2">
             {state.opponents.map((opp) => (

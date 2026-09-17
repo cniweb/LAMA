@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti';
 import { ArrowRight, Sparkles, Trophy } from 'lucide-react';
 import type React from 'react';
 import { useEffect } from 'react';
+import { useModalDialog } from '../hooks/useModalDialog.js';
 import { Card } from './Card.js';
 
 interface RoundSummaryModalProps {
@@ -18,15 +19,24 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
 }) => {
   const isGameOver = state.phase === 'GAME_OVER';
   const isPendingMyChipDiscard = state.pendingChipDiscardPlayerId === state.myPlayer.id;
+  // Blockierender Dialog (kein onClose): Fokus-Falle ja, Esc-Schließen nein.
+  const dialogRef = useModalDialog<HTMLDivElement>(true);
 
   useEffect(() => {
-    if (isGameOver || isPendingMyChipDiscard) {
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
+    if (!(isGameOver || isPendingMyChipDiscard)) {
+      return;
     }
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return;
+    }
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+    });
   }, [isGameOver, isPendingMyChipDiscard]);
 
   if (
@@ -40,6 +50,11 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
   return (
     <div
       data-testid="round-summary"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="round-summary-title"
+      ref={dialogRef}
+      tabIndex={-1}
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 overflow-y-auto"
     >
       <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center">
@@ -49,7 +64,9 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
             <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-amber-400 mb-3 animate-bounce">
               <Trophy className="w-9 h-9" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-amber-400">Spiel beendet!</h2>
+            <h2 id="round-summary-title" className="text-2xl sm:text-3xl font-black text-amber-400">
+              Spiel beendet!
+            </h2>
             <p className="text-sm text-slate-300 mt-1">
               Mindestens ein Spieler hat 40 Minuspunkte erreicht.
             </p>
@@ -62,7 +79,7 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
         ) : (
           <div className="flex flex-col items-center text-center mb-6">
             <h2 className="text-2xl sm:text-3xl font-black text-slate-100 flex items-center gap-2">
-              <span>Durchgang {state.roundNumber} beendet</span>
+              <span id="round-summary-title">Durchgang {state.roundNumber} beendet</span>
               <Sparkles className="w-6 h-6 text-amber-400" />
             </h2>
             <p className="text-sm text-slate-400 mt-0.5">

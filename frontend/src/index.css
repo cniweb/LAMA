@@ -21,3 +21,16 @@
   transform: translateY(-16px) scale(1.05);
   box-shadow: 0 0 25px 6px rgba(250, 204, 21, 0.85);
 }
+
+/* Bewegungsempfindliche Nutzer: alle Animationen/Transitionen deaktivieren.
+   Ohne !important: Unlayered-Autoren-CSS schlägt Tailwind-Utilities
+   (Cascade Layer) von sich aus. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
+}
