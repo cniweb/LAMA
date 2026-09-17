@@ -57,9 +57,8 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
 ---
 
 ## 5. Relevante Spezifikationen & Dokumente
-* Spielregeln (Original-PDF): `01907-DE-AmigoRule.pdf`
 * Technische Spezifikation: `docs/superpowers/specs/2026-09-17-lama-online-design.md`
-* Spieler-Dokumentation: `README.md`
+* Spieler-Dokumentation & Spielregeln: `README.md`
 
 ---
 
