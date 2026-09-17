@@ -170,7 +170,10 @@ export function App() {
                 Raum: {roomCode}
               </span>
               {state?.roundNumber ? (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold">
+                <span
+                  data-testid="round-badge"
+                  className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold"
+                >
                   Durchgang {state.roundNumber}
                 </span>
               ) : null}

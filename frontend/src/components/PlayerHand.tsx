@@ -46,13 +46,17 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 
         {isTurn ? (
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider animate-pulse">
+            <span
+              data-testid="turn-indicator"
+              className="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider animate-pulse"
+            >
               Du bist am Zug!
             </span>
             {canFold && (
               <button
                 type="button"
                 onClick={onFold}
+                data-testid="fold-button"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-rose-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105"
                 title="Aus dem Durchgang aussteigen und aktuelle Handkarten verdeckt sichern"
               >
@@ -64,6 +68,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               <button
                 type="button"
                 onClick={onDrawCard}
+                data-testid="draw-button"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-blue-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105"
                 title="1 Karte vom Nachziehstapel ziehen"
               >
@@ -89,7 +94,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       )}
 
       {/* Hand Cards Fan */}
-      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-2 px-2 max-w-4xl min-h-[110px] sm:min-h-[140px]">
+      <div
+        data-testid="player-hand"
+        className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-2 px-2 max-w-4xl min-h-[110px] sm:min-h-[140px]"
+      >
         {isFolded ? (
           <div className="flex flex-col items-center justify-center p-4 rounded-xl border border-dashed border-slate-700/60 bg-slate-900/40 text-slate-400">
             <span className="font-bold text-sm">Deine Karten liegen verdeckt vor dir.</span>

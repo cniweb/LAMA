@@ -10,6 +10,7 @@
   "scripts": {
     "build": "npm run build --workspace=shared && npm run build --workspace=frontend && npm run build --workspace=worker",
     "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e --workspace=frontend",
     "lint": "biome ci .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",

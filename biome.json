@@ -7,7 +7,16 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["shared/**/*", "worker/**/*", "frontend/**/*", "!**/dist", "!**/node_modules"]
+    "includes": [
+      "shared/**/*",
+      "worker/**/*",
+      "frontend/**/*",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/test-results",
+      "!**/playwright-report",
+      "!**/blob-report"
+    ]
   },
   "formatter": {
     "enabled": true,

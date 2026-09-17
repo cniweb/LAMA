@@ -7,3 +7,8 @@ dist/
 *.log
 coverage/
 *.tsbuildinfo
+# Playwright E2E artefacts (traces, screenshots, reports)
+/test-results/
+**/test-results/
+playwright-report/
+blob-report/

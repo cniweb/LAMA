@@ -38,7 +38,10 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ state, onStartGame }) => {
           <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
             Raum-Code:
           </span>
-          <div className="text-2xl sm:text-3xl font-black tracking-widest text-emerald-400">
+          <div
+            data-testid="room-code"
+            className="text-2xl sm:text-3xl font-black tracking-widest text-emerald-400"
+          >
             {state.roomCode}
           </div>
         </div>
@@ -125,6 +128,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ state, onStartGame }) => {
           type="button"
           disabled={!canStart}
           onClick={onStartGame}
+          data-testid="start-game-button"
           className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-base shadow-xl transition-all ${
             canStart
               ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 cursor-pointer hover:scale-102'
