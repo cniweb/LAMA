@@ -1,5 +1,5 @@
 import type { ClientRoomView } from '@lama/shared';
-import { Check, Copy, Crown, Play, Users, WifiOff } from 'lucide-react';
+import { Check, Copy, Crown, Play, Share2, Users, WifiOff } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -11,11 +11,28 @@ interface LobbyViewProps {
 export const LobbyView: React.FC<LobbyViewProps> = ({ state, onStartGame }) => {
   const [copied, setCopied] = useState(false);
 
-  const copyInviteLink = () => {
-    const url = `${window.location.origin}/?room=${state.roomCode}`;
-    navigator.clipboard.writeText(url);
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+  const inviteUrl = `${window.location.origin}/?room=${state.roomCode}`;
+
+  const copyInviteLink = async () => {
+    await navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareInviteLink = async () => {
+    try {
+      await navigator.share({
+        title: 'LAMA – Spieleinladung',
+        text: `Komm in meinen LAMA-Raum ${state.roomCode}!`,
+        url: inviteUrl,
+      });
+    } catch (e) {
+      // Abbruch durch den Nutzer: nichts tun; andere Fehler → Fallback Kopieren.
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+      await copyInviteLink();
+    }
   };
 
   const totalPlayers = state.opponents.length + 1;
@@ -46,14 +63,26 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ state, onStartGame }) => {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={copyInviteLink}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-xs sm:text-sm border border-slate-700 transition-all cursor-pointer shadow"
-        >
-          {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-          <span>{copied ? 'Link kopiert!' : 'Link teilen'}</span>
-        </button>
+        <div className="flex shrink-0 flex-col gap-2">
+          {canShare && (
+            <button
+              type="button"
+              onClick={shareInviteLink}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs sm:text-sm transition-all cursor-pointer shadow"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Link teilen</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={copyInviteLink}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-xs sm:text-sm border border-slate-700 transition-all cursor-pointer shadow"
+          >
+            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+            <span>{copied ? 'Link kopiert!' : 'Link kopieren'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Players in Room */}

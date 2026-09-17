@@ -59,3 +59,34 @@ test('Einladungslink füllt ohne gespeicherten Namen das Beitrittsformular vor',
     await ctxB.close();
   }
 });
+
+test('Link teilen ruft natives Sharing mit Einladungs-URL auf', async ({
+  browser,
+}: {
+  browser: Browser;
+}) => {
+  const ctx = await browser.newContext();
+  await ctx.addInitScript(() => {
+    const w = window as unknown as { __sharedUrls: (string | undefined)[] };
+    w.__sharedUrls = [];
+    Object.defineProperty(window.navigator, 'share', {
+      value: async (data?: ShareData): Promise<void> => {
+        w.__sharedUrls.push(data?.url);
+      },
+      configurable: true,
+    });
+  });
+  const host = await ctx.newPage();
+  try {
+    const code = await createRoomAs(host, 'Share-A');
+    await host.getByRole('button', { name: 'Link teilen' }).click();
+    const shared = await host.evaluate(
+      () => (window as unknown as { __sharedUrls: string[] }).__sharedUrls
+    );
+    expect(shared).toHaveLength(1);
+    expect(shared[0]).toContain(`?room=${code}`);
+    await expect(host.getByRole('button', { name: 'Link kopieren' })).toBeVisible();
+  } finally {
+    await ctx.close();
+  }
+});
