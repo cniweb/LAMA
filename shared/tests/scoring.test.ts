@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { calculateUniquePoints, pointsToChips, totalChipScore } from '../src/game-engine.js';
 
 describe('LAMA Scoring & Chips', () => {

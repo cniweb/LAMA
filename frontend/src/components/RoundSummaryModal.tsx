@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
-import { ClientRoomView } from '@lama/shared';
-import { Card } from './Card.js';
-import { ChipDisplay } from './ChipDisplay.js';
+import type { ClientRoomView } from '@lama/shared';
 import confetti from 'canvas-confetti';
-import { Trophy, ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, Trophy } from 'lucide-react';
+import type React from 'react';
+import { useEffect } from 'react';
+import { Card } from './Card.js';
 
 interface RoundSummaryModalProps {
   state: ClientRoomView;
@@ -29,7 +29,11 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
     }
   }, [isGameOver, isPendingMyChipDiscard]);
 
-  if (state.phase !== 'ROUND_SUMMARY' && state.phase !== 'GAME_OVER' && !state.pendingChipDiscardPlayerId) {
+  if (
+    state.phase !== 'ROUND_SUMMARY' &&
+    state.phase !== 'GAME_OVER' &&
+    !state.pendingChipDiscardPlayerId
+  ) {
     return null;
   }
 
@@ -42,9 +46,7 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
             <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-amber-400 mb-3 animate-bounce">
               <Trophy className="w-9 h-9" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-amber-400">
-              Spiel beendet!
-            </h2>
+            <h2 className="text-2xl sm:text-3xl font-black text-amber-400">Spiel beendet!</h2>
             <p className="text-sm text-slate-300 mt-1">
               Mindestens ein Spieler hat 40 Minuspunkte erreicht.
             </p>
@@ -145,9 +147,7 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
               </div>
 
               <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-700/50">
-                <div className="text-xs text-slate-400">
-                  +{score.uniquePoints} Pkt.
-                </div>
+                <div className="text-xs text-slate-400">+{score.uniquePoints} Pkt.</div>
                 <div className="text-right">
                   <div className="text-sm sm:text-base font-black text-rose-300">
                     Gesamt: {score.totalScoreAfterRound} Pkt.

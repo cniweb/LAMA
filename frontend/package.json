@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "lint": "biome ci ./src",
     "preview": "vite preview"
   },
   "dependencies": {

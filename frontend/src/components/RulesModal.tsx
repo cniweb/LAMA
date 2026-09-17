@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, HelpCircle } from 'lucide-react';
+import { HelpCircle, X } from 'lucide-react';
+import type React from 'react';
 
 interface RulesModalProps {
   isOpen: boolean;
@@ -22,9 +22,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
 
         <div className="flex items-center gap-2 mb-4">
           <HelpCircle className="w-6 h-6 text-amber-400" />
-          <h2 className="text-xl sm:text-2xl font-black text-amber-400">
-            LAMA Spielregeln
-          </h2>
+          <h2 className="text-xl sm:text-2xl font-black text-amber-400">LAMA Spielregeln</h2>
         </div>
 
         <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
@@ -33,7 +31,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               🎯 Das Prinzip: Lege Alle Minuspunkte Ab!
             </h3>
             <p>
-              Ziel ist es, so schnell wie möglich alle Handkarten loszuwerden, um keine Minuspunkte zu kassieren.
+              Ziel ist es, so schnell wie möglich alle Handkarten loszuwerden, um keine Minuspunkte
+              zu kassieren.
             </p>
           </section>
 
@@ -43,15 +42,20 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
             </h3>
             <ul className="list-disc pl-5 space-y-1">
               <li>
-                <strong>Karte ablegen:</strong> Gleicher Wert oder genau +1 (z.B. 3 auf 3 oder 4 auf 3).
+                <strong>Karte ablegen:</strong> Gleicher Wert oder genau +1 (z.B. 3 auf 3 oder 4 auf
+                3).
                 <br />
-                <em>Sonderfälle:</em> Auf eine <strong>6</strong> darf eine 6 oder ein <strong>Lama</strong> gelegt werden. Auf ein <strong>Lama</strong> darf ein Lama oder eine <strong>1</strong> gelegt werden.
+                <em>Sonderfälle:</em> Auf eine <strong>6</strong> darf eine 6 oder ein{' '}
+                <strong>Lama</strong> gelegt werden. Auf ein <strong>Lama</strong> darf ein Lama
+                oder eine <strong>1</strong> gelegt werden.
               </li>
               <li>
-                <strong>Karte nachziehen:</strong> 1 Karte vom Nachziehstapel ziehen (Zug endet sofort). Wenn der Stapel leer ist, darf nicht mehr gezogen werden!
+                <strong>Karte nachziehen:</strong> 1 Karte vom Nachziehstapel ziehen (Zug endet
+                sofort). Wenn der Stapel leer ist, darf nicht mehr gezogen werden!
               </li>
               <li>
-                <strong>Aussteigen (Passen):</strong> Handkarten verdeckt sichern. Für dich ist der Durchgang beendet.
+                <strong>Aussteigen (Passen):</strong> Handkarten verdeckt sichern. Für dich ist der
+                Durchgang beendet.
               </li>
             </ul>
           </section>
@@ -61,7 +65,9 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               ⚡ Solo-Endspurt
             </h3>
             <p>
-              Sind alle anderen Mitspieler ausgestiegen, spielst du alleine weiter. Du darfst jedoch <strong>nicht mehr nachziehen</strong>, sondern nur noch ablegen, solange du kannst und willst!
+              Sind alle anderen Mitspieler ausgestiegen, spielst du alleine weiter. Du darfst jedoch{' '}
+              <strong>nicht mehr nachziehen</strong>, sondern nur noch ablegen, solange du kannst
+              und willst!
             </p>
           </section>
 
@@ -81,8 +87,9 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               🌟 Chip-Bonus & Spielende
             </h3>
             <p>
-              Wer alle Karten abgelegt hat, darf einen beliebigen Chip (auch einen schwarzen 10er!) abgeben.
-              Erreicht jemand <strong>40 Minuspunkte</strong>, endet das Spiel und wer am wenigsten Punkte hat, gewinnt!
+              Wer alle Karten abgelegt hat, darf einen beliebigen Chip (auch einen schwarzen 10er!)
+              abgeben. Erreicht jemand <strong>40 Minuspunkte</strong>, endet das Spiel und wer am
+              wenigsten Punkte hat, gewinnt!
             </p>
           </section>
         </div>

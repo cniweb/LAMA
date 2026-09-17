@@ -1,7 +1,7 @@
-import React from 'react';
-import { CardValue } from '@lama/shared';
-import { Card } from './Card.js';
+import type { CardValue } from '@lama/shared';
 import { Layers } from 'lucide-react';
+import type React from 'react';
+import { Card } from './Card.js';
 
 interface DiscardPileProps {
   topDiscardCard: CardValue | null;

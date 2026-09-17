@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { ClientRoomView } from '@lama/shared';
-import { Users, Copy, Check, Play, Crown, WifiOff } from 'lucide-react';
+import type { ClientRoomView } from '@lama/shared';
+import { Check, Copy, Crown, Play, Users, WifiOff } from 'lucide-react';
+import type React from 'react';
+import { useState } from 'react';
 
 interface LobbyViewProps {
   state: ClientRoomView;
@@ -25,9 +26,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ state, onStartGame }) => {
       {/* Title & Badge */}
       <div className="flex items-center gap-2 mb-2">
         <span className="text-3xl">🦙</span>
-        <h1 className="text-2xl sm:text-3xl font-black text-amber-400">
-          LAMA Spiellobby
-        </h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-amber-400">LAMA Spiellobby</h1>
       </div>
       <p className="text-xs sm:text-sm text-slate-400 text-center mb-6">
         Lade deine Freunde ein. Sobald mindestens 2 Spieler im Raum sind, kann es losgehen!
@@ -76,9 +75,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ state, onStartGame }) => {
                 {state.myPlayer.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-sm text-slate-100">
-                  {state.myPlayer.name}
-                </span>
+                <span className="font-extrabold text-sm text-slate-100">{state.myPlayer.name}</span>
                 <span className="text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">
                   Du
                 </span>

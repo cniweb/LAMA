@@ -1,16 +1,12 @@
-import { useState, useEffect } from 'react';
-import {
-  getSavedPlayerName,
-  savePlayerName,
-  useGameSocket,
-} from './hooks/useGameSocket.js';
-import { Opponent } from './components/Opponent.js';
+import { HelpCircle, LogOut, Sparkles, Wifi, WifiOff } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { DiscardPile } from './components/DiscardPile.js';
-import { PlayerHand } from './components/PlayerHand.js';
 import { LobbyView } from './components/LobbyView.js';
+import { Opponent } from './components/Opponent.js';
+import { PlayerHand } from './components/PlayerHand.js';
 import { RoundSummaryModal } from './components/RoundSummaryModal.js';
 import { RulesModal } from './components/RulesModal.js';
-import { HelpCircle, LogOut, Wifi, WifiOff, Sparkles } from 'lucide-react';
+import { getSavedPlayerName, savePlayerName, useGameSocket } from './hooks/useGameSocket.js';
 
 export function App() {
   const [roomCode, setRoomCode] = useState<string | null>(() => {
@@ -40,7 +36,7 @@ export function App() {
     setIsCreatingRoom(true);
     try {
       const res = await fetch('/api/room/create', { method: 'POST' });
-      const data = await res.json() as { roomCode: string };
+      const data = (await res.json()) as { roomCode: string };
       setRoomCode(data.roomCode);
       setHasJoined(true);
     } catch (e) {
@@ -82,10 +78,14 @@ export function App() {
 
           <div className="w-full space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="player-name-input"
+                className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+              >
                 Dein Spielername
               </label>
               <input
+                id="player-name-input"
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
@@ -115,10 +115,14 @@ export function App() {
 
             <form onSubmit={handleJoinRoom} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="room-code-input"
+                  className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+                >
                   Raum-Code
                 </label>
                 <input
+                  id="room-code-input"
                   type="text"
                   value={inputCode}
                   onChange={(e) => setInputCode(e.target.value.toUpperCase())}

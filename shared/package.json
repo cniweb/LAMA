@@ -13,7 +13,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "biome ci ./src ./tests"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

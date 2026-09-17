@@ -50,9 +50,12 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
 
 * `npm run build`: Baut alle Workspaces (`shared`, `frontend`, `worker`).
 * `npm test`: Führt alle Unit-Tests aus.
-* `npm run lint`: Prüft Code-Qualität und Formatierung.
+* `npm run lint`: Prüft Lint, Format und Import-Sortierung mit Biome (`biome ci .`).
+* `npm run lint:fix`: Wendet sichere Biome-Autofixes an (`biome check --write .`).
+* `npm run format` / `npm run format:check`: Formatiert bzw. prüft die Formatierung.
 * `npm run dev:frontend`: Startet den Vite-Dev-Server mit lokalem Worker-Proxy.
 * `npm run dev:worker`: Startet Wrangler im lokalen Modus (`wrangler dev`).
+* **CI (`.github/workflows/ci.yml`):** Läuft bei jedem Push auf `main` und jedem Pull Request mit den Jobs `lint`, `test` und `build` (inkl. `npm audit --audit-level=high`). Der `build`-Job wartet auf `lint` und `test`.
 
 ---
 
@@ -98,3 +101,8 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
 * **Striktere CSS/Asset-Typisierung:**
   * *Stolperstein:* TypeScript 7 verlangt Typdeklarationen für Side-Effect-CSS-Imports (`import './index.css'`). Fehlen diese, bricht `tsc -b` mit `error TS2882: Cannot find module or type declarations for side-effect import of './index.css'` ab.
   * *Best Practice:* In jedem Vite-Projekt zwingend `frontend/src/vite-env.d.ts` mit `/// <reference types="vite/client" />` anlegen, damit TypeScript 7 alle Vite-Asset-Typen standardkonform auflöst.
+
+### 6.7 Linter-Wahl bei TypeScript 7 (Biome statt ESLint)
+* **Stolperstein:** `typescript-eslint@8` deklariert eine Peer-Dependency `typescript@>=4.8.4 <6.1.0` und lässt sich unter TypeScript 7 nicht installieren (`ERESOLVE unable to resolve dependency tree`).
+* **Erkenntnis & Lösung:** Biome (`@biomejs/biome`) als Single-Tool für Lint + Format + Import-Sortierung einsetzen – es parst TS eigenständig und ist versionsunabhängig. Konfiguration in `biome.json` (Schema 2.x: `assist.actions.source.organizeImports`, keine `recommended`-Flags). `npm run lint` nutzt `biome ci .` (strikter CI-Modus ohne Änderungen).
+* **Beim Einführen auf Bestand anwenden:** `biome check --write .` einmalig laufen lassen, danach gezielt nacharbeiten (z. B. `noNonNullAssertion` durch explizite `undefined`-Checks ersetzen, `a11y/noLabelWithoutControl` via `htmlFor`/`id` beheben). Vorsicht bei blinden `replaceAll`-Fixes: Array-Literale wie `['p1']` können versehentlich mit umgeschrieben werden – danach immer `npm test` + `npm run build` verifizieren.

@@ -1,14 +1,13 @@
-import {
+import { createDeck, shuffleDeck } from './deck.js';
+import type {
   CardValue,
   ChipCount,
   ClientOpponentView,
   ClientRoomView,
-  GamePhase,
   GameState,
   Player,
   RoundPlayerScore,
 } from './types.js';
-import { createDeck, shuffleDeck } from './deck.js';
 
 export function canPlayCard(topCard: CardValue, candidate: CardValue): boolean {
   if (topCard === 'L') {
@@ -17,7 +16,7 @@ export function canPlayCard(topCard: CardValue, candidate: CardValue): boolean {
   if (topCard === 6) {
     return candidate === 6 || candidate === 'L';
   }
-  return candidate === topCard || candidate === (topCard + 1);
+  return candidate === topCard || candidate === topCard + 1;
 }
 
 export function calculateUniquePoints(cards: CardValue[]): number {
@@ -51,9 +50,7 @@ export function isSoloEndspurt(state: GameState): boolean {
 }
 
 export function getActivePlayerCount(state: GameState): number {
-  return state.playerOrder.filter(
-    (id) => state.players[id]?.status === 'ACTIVE'
-  ).length;
+  return state.playerOrder.filter((id) => state.players[id]?.status === 'ACTIVE').length;
 }
 
 export function getNextActiveTurnIndex(
@@ -90,11 +87,7 @@ export function createInitialGameState(roomCode: string, hostId: string): GameSt
   };
 }
 
-export function addPlayerToRoom(
-  state: GameState,
-  id: string,
-  name: string
-): GameState {
+export function addPlayerToRoom(state: GameState, id: string, name: string): GameState {
   if (state.players[id]) {
     // Reconnection of existing player
     return {
@@ -159,7 +152,10 @@ export function startRound(state: GameState, starterPlayerId?: string): GameStat
   }
 
   // 1 card to discard pile
-  const topDiscard = deck.pop()!;
+  const topDiscard = deck.pop();
+  if (topDiscard === undefined) {
+    throw new Error('Das Deck ist leer, es kann kein Ablagestapel gebildet werden.');
+  }
   const discardPile = [topDiscard];
   const drawPile = deck;
 
@@ -187,11 +183,7 @@ export function startRound(state: GameState, starterPlayerId?: string): GameStat
   };
 }
 
-export function playCard(
-  state: GameState,
-  playerId: string,
-  card: CardValue
-): GameState {
+export function playCard(state: GameState, playerId: string, card: CardValue): GameState {
   if (state.phase !== 'IN_ROUND') {
     throw new Error('Kein Durchgang aktiv.');
   }
@@ -202,7 +194,7 @@ export function playCard(
   }
 
   const player = state.players[playerId];
-  if (!player || player.status !== 'ACTIVE') {
+  if (player?.status !== 'ACTIVE') {
     throw new Error('Spieler ist nicht aktiv.');
   }
 
@@ -271,7 +263,7 @@ export function drawCard(state: GameState, playerId: string): GameState {
   }
 
   const player = state.players[playerId];
-  if (!player || player.status !== 'ACTIVE') {
+  if (player?.status !== 'ACTIVE') {
     throw new Error('Spieler ist nicht aktiv.');
   }
 
@@ -279,12 +271,11 @@ export function drawCard(state: GameState, playerId: string): GameState {
     throw new Error('Im Solo-Endspurt darf keine Karte mehr gezogen werden.');
   }
 
-  if (state.drawPile.length === 0) {
+  const newDrawPile = [...state.drawPile];
+  const drawnCard = newDrawPile.pop();
+  if (drawnCard === undefined) {
     throw new Error('Der Nachziehstapel ist leer. Du musst ablegen oder aussteigen.');
   }
-
-  const newDrawPile = [...state.drawPile];
-  const drawnCard = newDrawPile.pop()!;
 
   const updatedPlayer: Player = {
     ...player,
@@ -319,7 +310,7 @@ export function foldPlayer(state: GameState, playerId: string): GameState {
   }
 
   const player = state.players[playerId];
-  if (!player || player.status !== 'ACTIVE') {
+  if (player?.status !== 'ACTIVE') {
     throw new Error('Spieler ist nicht aktiv.');
   }
 
@@ -353,11 +344,7 @@ export function foldPlayer(state: GameState, playerId: string): GameState {
   }
 
   // Next active player
-  const nextTurnIndex = getNextActiveTurnIndex(
-    state.playerOrder,
-    updatedPlayers,
-    state.turnIndex
-  );
+  const nextTurnIndex = getNextActiveTurnIndex(state.playerOrder, updatedPlayers, state.turnIndex);
 
   return {
     ...state,
@@ -420,12 +407,17 @@ export function settleRound(
 
   return {
     ...state,
-    phase: pendingChipDiscardPlayerId ? 'IN_ROUND' : someoneReached40 ? 'GAME_OVER' : 'ROUND_SUMMARY',
+    phase: pendingChipDiscardPlayerId
+      ? 'IN_ROUND'
+      : someoneReached40
+        ? 'GAME_OVER'
+        : 'ROUND_SUMMARY',
     players: updatedPlayers,
     lastRoundFinisherId: endingPlayerId,
     pendingChipDiscardPlayerId,
     lastRoundSummary: roundSummary,
-    winners: someoneReached40 && !pendingChipDiscardPlayerId ? determineWinners(updatedPlayers) : null,
+    winners:
+      someoneReached40 && !pendingChipDiscardPlayerId ? determineWinners(updatedPlayers) : null,
   };
 }
 
@@ -466,16 +458,17 @@ export function discardBonusChip(
   };
 
   // Update roundSummary with returned chip
-  const updatedSummary = state.lastRoundSummary?.map((s) => {
-    if (s.playerId === playerId) {
-      return {
-        ...s,
-        bonusChipReturned: chipType,
-        totalScoreAfterRound: newTotal,
-      };
-    }
-    return s;
-  }) ?? null;
+  const updatedSummary =
+    state.lastRoundSummary?.map((s) => {
+      if (s.playerId === playerId) {
+        return {
+          ...s,
+          bonusChipReturned: chipType,
+          totalScoreAfterRound: newTotal,
+        };
+      }
+      return s;
+    }) ?? null;
 
   const someoneReached40 = Object.values(updatedPlayers).some((p) => p.totalScore >= 40);
 
@@ -503,10 +496,7 @@ export function determineWinners(players: Record<string, Player>): string[] {
   return playerList.filter((p) => p.totalScore === minScore).map((p) => p.id);
 }
 
-export function filterStateForClient(
-  state: GameState,
-  viewerSessionId: string
-): ClientRoomView {
+export function filterStateForClient(state: GameState, viewerSessionId: string): ClientRoomView {
   const viewer = state.players[viewerSessionId] || {
     id: viewerSessionId,
     name: 'Zuschauer',
@@ -520,7 +510,8 @@ export function filterStateForClient(
 
   const currentTurnPlayerId = state.playerOrder[state.turnIndex];
   const isMyTurn = state.phase === 'IN_ROUND' && currentTurnPlayerId === viewerSessionId;
-  const topDiscardCard = state.discardPile.length > 0 ? state.discardPile[state.discardPile.length - 1] : null;
+  const topDiscardCard =
+    state.discardPile.length > 0 ? state.discardPile[state.discardPile.length - 1] : null;
 
   const validPlays: CardValue[] = [];
   if (isMyTurn && topDiscardCard !== null && viewer.status === 'ACTIVE') {

@@ -1,18 +1,18 @@
 import { DurableObject } from 'cloudflare:workers';
-import type { Env } from './index.js';
 import {
-  ClientMessage,
-  ServerMessage,
-  GameState,
   addPlayerToRoom,
+  type ClientMessage,
   createInitialGameState,
   discardBonusChip,
   drawCard,
   filterStateForClient,
   foldPlayer,
+  type GameState,
   playCard,
+  type ServerMessage,
   startRound,
 } from '@lama/shared';
+import type { Env } from './index.js';
 
 interface WebSocketAttachment {
   sessionId: string;
@@ -42,9 +42,7 @@ export class GameRoom extends DurableObject<Env> {
       return this.stateCache;
     }
 
-    const cursor = this.ctx.storage.sql.exec(
-      "SELECT data FROM game_store WHERE id = 'state'"
-    );
+    const cursor = this.ctx.storage.sql.exec("SELECT data FROM game_store WHERE id = 'state'");
     const rows = [...cursor];
     if (rows.length > 0 && rows[0].data) {
       try {
@@ -175,7 +173,10 @@ export class GameRoom extends DurableObject<Env> {
           nextState = discardBonusChip(state, sessionId, clientMsg.chipType);
           const pName = state.players[sessionId]?.name || 'Ein Spieler';
           const chipLabel = clientMsg.chipType === 'black' ? 'schwarzen 10er' : 'weißen 1er';
-          this.broadcastNotification(`${pName} hat einen ${chipLabel}-Chip abgegeben! 🎉`, 'success');
+          this.broadcastNotification(
+            `${pName} hat einen ${chipLabel}-Chip abgegeben! 🎉`,
+            'success'
+          );
           break;
         }
 

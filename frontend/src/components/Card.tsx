@@ -1,5 +1,5 @@
-import React from 'react';
-import { CardValue } from '@lama/shared';
+import type { CardValue } from '@lama/shared';
+import type React from 'react';
 
 interface CardProps {
   value?: CardValue;
@@ -11,15 +11,16 @@ interface CardProps {
   className?: string;
 }
 
-const CARD_STYLES: Record<CardValue, { bg: string; text: string; border: string; label: string }> = {
-  1: { bg: 'bg-yellow-100', text: 'text-amber-800', border: 'border-amber-300', label: '1' },
-  2: { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300', label: '2' },
-  3: { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-300', label: '3' },
-  4: { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300', label: '4' },
-  5: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', label: '5' },
-  6: { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300', label: '6' },
-  'L': { bg: 'bg-amber-300', text: 'text-amber-950', border: 'border-amber-500', label: '🦙' },
-};
+const CARD_STYLES: Record<CardValue, { bg: string; text: string; border: string; label: string }> =
+  {
+    1: { bg: 'bg-yellow-100', text: 'text-amber-800', border: 'border-amber-300', label: '1' },
+    2: { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300', label: '2' },
+    3: { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-300', label: '3' },
+    4: { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300', label: '4' },
+    5: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', label: '5' },
+    6: { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300', label: '6' },
+    L: { bg: 'bg-amber-300', text: 'text-amber-950', border: 'border-amber-500', label: '🦙' },
+  };
 
 export const Card: React.FC<CardProps> = ({
   value,
@@ -55,7 +56,7 @@ export const Card: React.FC<CardProps> = ({
   return (
     <button
       type="button"
-      disabled={disabled || !playable && onClick === undefined}
+      disabled={disabled || (!playable && onClick === undefined)}
       onClick={playable && onClick ? onClick : undefined}
       className={`relative select-none font-black flex flex-col justify-between p-1.5 sm:p-2.5 shadow-lg transition-all duration-150 ${style.bg} ${style.text} ${style.border} ${sizeClasses} ${
         playable ? 'card-playable cursor-pointer' : ''

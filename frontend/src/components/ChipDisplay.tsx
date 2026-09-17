@@ -1,5 +1,5 @@
-import React from 'react';
-import { ChipCount } from '@lama/shared';
+import type { ChipCount } from '@lama/shared';
+import type React from 'react';
 
 interface ChipDisplayProps {
   chips: ChipCount;
@@ -33,7 +33,7 @@ export const ChipDisplay: React.FC<ChipDisplayProps> = ({
         <button
           type="button"
           disabled={!interactive || chips.black === 0}
-          onClick={() => interactive && onSelectChip && onSelectChip('black')}
+          onClick={() => onSelectChip?.('black')}
           className={`relative rounded-full flex items-center justify-center font-black shadow-md border-2 border-dashed border-slate-400 bg-slate-900 text-amber-400 transition-all ${chipSizes} ${
             interactive && chips.black > 0
               ? 'cursor-pointer hover:scale-110 hover:ring-4 hover:ring-amber-400/60 ring-offset-2 ring-offset-slate-900'
@@ -50,7 +50,7 @@ export const ChipDisplay: React.FC<ChipDisplayProps> = ({
         <button
           type="button"
           disabled={!interactive || chips.white === 0}
-          onClick={() => interactive && onSelectChip && onSelectChip('white')}
+          onClick={() => onSelectChip?.('white')}
           className={`relative rounded-full flex items-center justify-center font-black shadow-md border-2 border-dashed border-slate-300 bg-slate-100 text-slate-900 transition-all ${chipSizes} ${
             interactive && chips.white > 0
               ? 'cursor-pointer hover:scale-110 hover:ring-4 hover:ring-white/60 ring-offset-2 ring-offset-slate-900'

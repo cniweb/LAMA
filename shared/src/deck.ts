@@ -1,4 +1,4 @@
-import { CardValue } from './types.js';
+import type { CardValue } from './types.js';
 
 export const CARD_VALUES: CardValue[] = [1, 2, 3, 4, 5, 6, 'L'];
 export const COPIES_PER_CARD = 8;

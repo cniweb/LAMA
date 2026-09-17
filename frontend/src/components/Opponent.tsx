@@ -1,8 +1,8 @@
-import React from 'react';
-import { ClientOpponentView } from '@lama/shared';
+import type { ClientOpponentView } from '@lama/shared';
+import { WifiOff } from 'lucide-react';
+import type React from 'react';
 import { Card } from './Card.js';
 import { ChipDisplay } from './ChipDisplay.js';
-import { WifiOff } from 'lucide-react';
 
 interface OpponentProps {
   opponent: ClientOpponentView;
@@ -17,8 +17,8 @@ export const Opponent: React.FC<OpponentProps> = ({ opponent }) => {
         opponent.isTurn
           ? 'bg-amber-500/15 border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)] scale-105'
           : isFolded
-          ? 'bg-slate-900/40 border-slate-700/50 opacity-70'
-          : 'bg-slate-900/70 border-slate-800'
+            ? 'bg-slate-900/40 border-slate-700/50 opacity-70'
+            : 'bg-slate-900/70 border-slate-800'
       }`}
     >
       {/* Turn indicator banner */}

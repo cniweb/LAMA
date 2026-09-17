@@ -5,6 +5,7 @@
   "main": "./src/index.ts",
   "scripts": {
     "build": "tsc --noEmit",
+    "lint": "biome ci ./src",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy"
   },

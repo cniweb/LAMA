@@ -1,8 +1,8 @@
-import React from 'react';
-import { CardValue, ChipCount, PlayerStatus } from '@lama/shared';
+import type { CardValue, ChipCount, PlayerStatus } from '@lama/shared';
+import { LogOut, PlusCircle } from 'lucide-react';
+import type React from 'react';
 import { Card } from './Card.js';
 import { ChipDisplay } from './ChipDisplay.js';
-import { LogOut, PlusCircle } from 'lucide-react';
 
 interface PlayerHandProps {
   hand: CardValue[];
@@ -77,9 +77,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
             Du bist ausgestiegen
           </span>
         ) : (
-          <span className="text-xs font-semibold text-slate-400">
-            Warten auf Mitspieler...
-          </span>
+          <span className="text-xs font-semibold text-slate-400">Warten auf Mitspieler...</span>
         )}
       </div>
 

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { CardValue, ClientMessage, ClientRoomView, ServerMessage } from '@lama/shared';
+import type { CardValue, ClientMessage, ClientRoomView, ServerMessage } from '@lama/shared';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const SESSION_KEY = 'lama_session_id';
 const NAME_KEY = 'lama_player_name';
@@ -7,7 +7,7 @@ const NAME_KEY = 'lama_player_name';
 export function getOrCreateSessionId(): string {
   let sid = localStorage.getItem(SESSION_KEY);
   if (!sid) {
-    sid = 'sid_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    sid = `sid_${Math.random().toString(36).substring(2, 10)}${Date.now().toString(36)}`;
     localStorage.setItem(SESSION_KEY, sid);
   }
   return sid;
@@ -99,7 +99,10 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
 
   // Actions
   const startGame = useCallback(() => sendMessage({ type: 'START_GAME' }), [sendMessage]);
-  const playCard = useCallback((card: CardValue) => sendMessage({ type: 'PLAY_CARD', card }), [sendMessage]);
+  const playCard = useCallback(
+    (card: CardValue) => sendMessage({ type: 'PLAY_CARD', card }),
+    [sendMessage]
+  );
   const drawCard = useCallback(() => sendMessage({ type: 'DRAW_CARD' }), [sendMessage]);
   const fold = useCallback(() => sendMessage({ type: 'FOLD' }), [sendMessage]);
   const discardChip = useCallback(
