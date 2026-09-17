@@ -60,3 +60,32 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
 * Spielregeln (Original-PDF): `01907-DE-AmigoRule.pdf`
 * Technische Spezifikation: `docs/superpowers/specs/2026-09-17-lama-online-design.md`
 * Spieler-Dokumentation: `README.md`
+
+---
+
+## 6. Stolpersteine, Wichtige Erkenntnisse & Lessons Learned
+
+### 6.1 Package Dependencies & Security Audit
+* **Wrangler v3 vs. v4:**
+  * *Stolperstein:* `wrangler@^3` zog über `@esbuild-plugins/node-modules-polyfill` alte Abhängigkeiten wie `sourcemap-codec@1.4.8` und `rollup-plugin-inject@3.0.2` an (Deprecation-Warnungen), sowie veraltete Versionen von `esbuild`, `miniflare`, `undici` und `ws` mit High/Moderate-Vulnerabilities.
+  * *Erkenntnis & Lösung:* Ein Upgrade auf `wrangler@^4.133.0` modernisiert den Bundler-Stack vollständig. 0 Vulnerabilities, 0 Deprecations, volle Kompatibilität mit Durable Objects und Worker Static Assets.
+* **Vitest Security (GHSA-82fw-gwwq-j7x9):**
+  * *Stolperstein:* Vitest 3.x wies eine Schwachstelle in `@vitest/mocker` auf.
+  * *Erkenntnis & Lösung:* Upgrade auf `vitest@^5.0.1` in `shared/package.json` schließt die Lücke vollständig. Alle Test-Suiten bleiben 100% kompatibel.
+
+### 6.2 Cloudflare Workers & Durable Objects Typisierung
+* **Generisches `DurableObject<Env>`:**
+  * *Stolperstein:* `constructor(ctx: DurableObjectState, env: unknown)` wirft in TypeScript Strict Mode einen TS2345 Fehler (`Argument of type 'unknown' is not assignable to parameter of type 'Env'`).
+  * *Best Practice:* Immer das interfacespezifische `Env` importieren und die Klasse als `class GameRoom extends DurableObject<Env>` mit `constructor(ctx: DurableObjectState, env: Env)` deklarieren.
+
+### 6.3 macOS Toolchain & Git Execution
+* **Xcode Command Line Tools vs. Xcode.app:**
+  * *Stolperstein:* Wenn `xcode-select` auf `/Applications/Xcode.app` zeigt, aber die Lizenz noch nicht akzeptiert wurde (`sudo xcodebuild -license`), bricht `/usr/bin/git` mit einem Lizenzfehler ab.
+  * *Lösung:* Ausführung mit `DEVELOPER_DIR=/Library/Developer/CommandLineTools git` greift direkt auf die lizenzfreien Command Line Tools zu.
+
+### 6.4 Build-Reihenfolge im Monorepo
+* **Asset-Bindeglied:**
+  * `worker/wrangler.jsonc` bindet `../frontend/dist` ein.
+  * *Erkenntnis:* Im Root-Build-Script (`package.json`) muss die Reihenfolge zwingend eingehalten werden:
+    `npm run build --workspace=shared && npm run build --workspace=frontend && npm run build --workspace=worker`
+  * Erst wenn `frontend/dist` existiert, kann Wrangler die Assets validieren und deployen.
