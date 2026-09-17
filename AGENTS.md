@@ -55,6 +55,7 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
 * `npm run format` / `npm run format:check`: Formatiert bzw. prüft die Formatierung.
 * `npm run dev:frontend`: Startet den Vite-Dev-Server mit lokalem Worker-Proxy.
 * `npm run dev:worker`: Startet Wrangler im lokalen Modus (`wrangler dev`).
+* `npm run deploy --workspace=worker`: Deployed den Worker (läuft mit cwd `worker/`, damit `wrangler.jsonc` gefunden wird).
 * **CI (`.github/workflows/ci.yml`):** Läuft bei jedem Push auf `main` und jedem Pull Request mit den Jobs `lint`, `test` und `build` (inkl. `npm audit --audit-level=high`). Der `build`-Job wartet auf `lint` und `test`.
 
 ---
@@ -123,3 +124,8 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
 * **Node-Typen in der Playwright-Config:** Das Frontend nutzt eine Browser-tsconfig ohne Node-Typen; `@types/node` wird für `playwright.config.ts` per `/// <reference types="node" />` eingebunden (statt globalem `types`-Feld). Die Config ist in `frontend/tsconfig.json` (`include`) enthalten, damit `tsc -b` sie mitprüft.
 * **Nach jedem Spec-Edit `npm run build` laufen lassen:** Playwright transpiliert Specs ohne Typprüfung – fehlende Typ-Imports (z. B. `Locator`) fallen lokal im E2E-Lauf nicht auf, lassen aber den CI-Build (`tsc -b`) rot werden. Verifikations-Reihenfolge vor Push: `npm run lint` → `npm run build` → `npm test` → `npm run test:e2e`.
 * **Artefakte fernhalten:** Playwright-Outputs (`test-results/`, `playwright-report/`, `blob-report/`) sind in `.gitignore` und aus `biome.json` (`files.includes`) ausgeschlossen – sonst lässt `biome ci` die CI rot werden.
+
+### 6.10 Cloudflare Workers Builds im Monorepo (Deploy-Verzeichnis)
+* **Stolperstein:** Der Cloudflare-Build (`npm run build`) lief fehlerfrei durch, aber `npx wrangler deploy` als Deploy-Command schlug fehl: `The Cloudflare application detection logic has been run in the root of a workspace instead of targeting a specific project.` Ursache: `wrangler.jsonc` liegt in `worker/`, der Deploy lief aber im Repo-Root ohne Config.
+* **Lösung (Dashboard-Einstellungen unter Workers Builds):** Root-Verzeichnis = Repo-Root belassen, Build-Command `npm run build`, aber **Deploy-Command auf `npm run deploy --workspace=worker` ändern**. npm setzt dabei cwd auf `worker/`, sodass Wrangler `wrangler.jsonc` sowie die relativen Pfade (`src/index.ts`, `../frontend/dist`) exakt wie lokal auflöst.
+* **Verifikation lokal:** `npm run deploy --workspace=worker -- --dry-run` muss Config, Assets (4 Dateien aus `frontend/dist`) und Bindings (`GAME_ROOM`, `ASSETS`) fehlerfrei auflisten.
