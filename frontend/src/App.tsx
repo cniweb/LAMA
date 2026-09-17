@@ -16,9 +16,11 @@ export function App() {
     const params = new URLSearchParams(window.location.search);
     return params.get('room')?.toUpperCase() || null;
   });
-  const [inputCode, setInputCode] = useState('');
+  const [inputCode, setInputCode] = useState(roomCode ?? '');
   const [playerName, setPlayerName] = useState(getSavedPlayerName);
-  const [hasJoined, setHasJoined] = useState(false);
+  const [hasJoined, setHasJoined] = useState(
+    roomCode !== null && getSavedPlayerName().trim() !== ''
+  );
   const [rulesOpen, setRulesOpen] = useState(false);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
