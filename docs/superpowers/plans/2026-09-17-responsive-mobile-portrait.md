@@ -637,7 +637,7 @@ ist reine Spacing-Reserve — alle Änderungen nur unterhalb `sm:`.
 
 `PlayerHand.tsx` (Hand-Fächer):
 `oldString`: `className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-2 px-2 max-w-4xl min-h-[110px] sm:min-h-[140px]"`
-`newString`: `className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-1 sm:py-2 px-2 max-w-4xl min-h-[110px] sm:min-h-[140px]"`
+`newString`: `className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-1 sm:py-2 px-2 max-w-4xl min-h-[92px] sm:min-h-[140px]"` (Controller-Nachschlag: Inhalt nur ~84px, spart 18px für die Solo-Reserve)
 - [ ] **Step 4: Deterministischen Solo-Test anhängen (`mobile-portrait.spec.ts`)**
 
 Ans Dateiende anhängen (bestehende Helper wiederverwenden):
