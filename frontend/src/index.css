@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .felt-table {
+    background-color: #0f3823;
+    background-image: 
+      radial-gradient(#165b38 15%, transparent 16%),
+      radial-gradient(#11442a 15%, transparent 16%);
+    background-size: 60px 60px;
+    background-position: 0 0, 30px 30px;
+  }
+}
+
+/* Card 3D tilt & smooth hover */
+.card-playable {
+  box-shadow: 0 0 15px 3px rgba(250, 204, 21, 0.6);
+  transform: translateY(-8px);
+}
+.card-playable:hover {
+  transform: translateY(-16px) scale(1.05);
+  box-shadow: 0 0 25px 6px rgba(250, 204, 21, 0.85);
+}

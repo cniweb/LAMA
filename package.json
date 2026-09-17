@@ -1,0 +1,20 @@
+{
+  "name": "lama-online-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "worker",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=shared && npm run build --workspace=frontend && npm run build --workspace=worker",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:worker": "npm run dev --workspace=worker"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
