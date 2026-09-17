@@ -36,7 +36,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const isFolded = status === 'FOLDED';
 
   return (
-    <div className="w-full flex flex-col items-center gap-3">
+    <div className="w-full flex flex-col items-center gap-3 pb-[env(safe-area-inset-bottom)]">
       {/* Turn Action Controls Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full max-w-2xl px-3 sm:px-4 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm">
         <div className="flex items-center gap-2">
