@@ -36,6 +36,7 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
   const reconnectAttemptRef = useRef(0);
   const sessionIdRef = useRef<string>(getOrCreateSessionId());
   const connectRef = useRef(() => {});
+  const leftRoomRef = useRef(false);
 
   const sendMessage = useCallback((msg: ClientMessage) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -55,7 +56,7 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    if (!roomCode || !playerName || document.hidden) {
+    if (!roomCode || !playerName || document.hidden || leftRoomRef.current) {
       return;
     }
     const backoff = Math.min(
@@ -72,7 +73,7 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
   }, [roomCode, playerName]);
 
   const connect = useCallback(() => {
-    if (!roomCode || !playerName) return;
+    if (!roomCode || !playerName || leftRoomRef.current) return;
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
@@ -168,6 +169,27 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
     [sendMessage]
   );
   const nextRound = useCallback(() => sendMessage({ type: 'NEXT_ROUND' }), [sendMessage]);
+  const exchangeChips = useCallback(() => sendMessage({ type: 'EXCHANGE_CHIPS' }), [sendMessage]);
+  const newGame = useCallback(() => sendMessage({ type: 'NEW_GAME' }), [sendMessage]);
+  const leaveRoom = useCallback(() => {
+    leftRoomRef.current = true;
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    sendMessage({ type: 'LEAVE_ROOM' });
+    if (socketRef.current) {
+      socketRef.current.close();
+      socketRef.current = null;
+    }
+    setState(null);
+    setIsConnected(false);
+  }, [sendMessage]);
+
+  // Raumwechsel (neuer roomCode): Leave-Flag zurücksetzen.
+  useEffect(() => {
+    leftRoomRef.current = false;
+  }, [roomCode]);
 
   return {
     state,
@@ -181,6 +203,9 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
       fold,
       discardChip,
       nextRound,
+      exchangeChips,
+      newGame,
+      leaveRoom,
     },
   };
 }
