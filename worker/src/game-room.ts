@@ -11,13 +11,12 @@ import {
   foldPlayer,
   type GameState,
   type GameVariant,
-  getNextActiveTurnIndex,
   isRoomExpired,
   MAX_MESSAGE_BYTES,
   migrateGameState,
   playCard,
   ROOM_TTL_MS,
-  removePlayerFromLobby,
+  removePlayerFromGame,
   resetGameForNewMatch,
   type ServerMessage,
   startRound,
@@ -300,32 +299,18 @@ export class GameRoom extends DurableObject<Env> {
         }
 
         case 'LEAVE_ROOM': {
-          if (state.phase === 'LOBBY') {
-            nextState = removePlayerFromLobby(state, sessionId);
-            if (nextState.playerOrder.length === 0) {
-              await this.saveState(nextState);
-              this.broadcastState();
-              return;
-            }
-          } else {
-            // Läuft die Partie: nur als getrennt markieren (Reconnect möglich).
-            const p = state.players[sessionId];
-            if (p) {
-              const updatedPlayers = {
-                ...state.players,
-                [sessionId]: { ...p, connected: false, status: 'DISCONNECTED' as const },
-              };
-              let turnIndex = state.turnIndex;
-              const currentId = state.playerOrder[state.turnIndex];
-              if (currentId === sessionId) {
-                turnIndex = getNextActiveTurnIndex(
-                  state.playerOrder,
-                  updatedPlayers,
-                  state.turnIndex
-                );
-              }
-              nextState = { ...state, players: updatedPlayers, turnIndex };
-            }
+          // Explizites Verlassen -> Slot hart entfernen, damit die übrigen
+          // Spieler weiterspielen können (Reconnect gibt es nur bei
+          // ungewolltem Verbindungsabbruch via webSocketClose).
+          const leaverName = state.players[sessionId]?.name || 'Ein Spieler';
+          nextState = removePlayerFromGame(state, sessionId);
+          if (nextState.playerOrder.length === 0) {
+            await this.saveState(nextState);
+            this.broadcastState();
+            return;
+          }
+          if (nextState.playerOrder.length !== state.playerOrder.length) {
+            this.broadcastNotification(`${leaverName} hat den Raum verlassen.`, 'info');
           }
           break;
         }
