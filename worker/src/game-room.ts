@@ -6,13 +6,15 @@ import {
   createInitialGameState,
   discardBonusChip,
   drawCard,
-  exchangeWhiteForBlack,
+  exchangeChipsUp,
   filterStateForClient,
   foldPlayer,
   type GameState,
+  type GameVariant,
   getNextActiveTurnIndex,
   isRoomExpired,
   MAX_MESSAGE_BYTES,
+  migrateGameState,
   playCard,
   ROOM_TTL_MS,
   removePlayerFromLobby,
@@ -52,7 +54,11 @@ export class GameRoom extends DurableObject<Env> {
     `);
   }
 
-  private async loadState(roomCode: string, hostId: string): Promise<GameState> {
+  private async loadState(
+    roomCode: string,
+    hostId: string,
+    variant: GameVariant = 'classic'
+  ): Promise<GameState> {
     if (this.stateCache) {
       return this.stateCache;
     }
@@ -61,14 +67,15 @@ export class GameRoom extends DurableObject<Env> {
     const rows = [...cursor];
     if (rows.length > 0 && rows[0].data) {
       try {
-        this.stateCache = JSON.parse(rows[0].data as string) as GameState;
+        const parsed = JSON.parse(rows[0].data as string) as GameState;
+        this.stateCache = migrateGameState(parsed);
         return this.stateCache;
       } catch (e) {
         console.error('Failed to parse saved game state', e);
       }
     }
 
-    const newState = createInitialGameState(roomCode, hostId);
+    const newState = createInitialGameState(roomCode, hostId, variant);
     await this.saveState(newState);
     return newState;
   }
@@ -158,8 +165,10 @@ export class GameRoom extends DurableObject<Env> {
       this.ctx.acceptWebSocket(serverWs, [sessionId]);
       serverWs.serializeAttachment({ sessionId, playerName });
 
-      // Load or initialize room state
-      const state = await this.loadState(roomCode, sessionId);
+      // Load or initialize room state (Variante fix bei Erstellung)
+      const requestedVariant: GameVariant =
+        url.searchParams.get('variant') === 'party' ? 'party' : 'classic';
+      const state = await this.loadState(roomCode, sessionId, requestedVariant);
 
       // Add/Re-add player to room state
       try {
@@ -253,7 +262,12 @@ export class GameRoom extends DurableObject<Env> {
         case 'DISCARD_CHIP': {
           nextState = discardBonusChip(state, sessionId, clientMsg.chipType);
           const pName = state.players[sessionId]?.name || 'Ein Spieler';
-          const chipLabel = clientMsg.chipType === 'black' ? 'schwarzen 10er' : 'weißen 1er';
+          const chipLabel =
+            clientMsg.chipType === 'pink'
+              ? 'pinken 20er'
+              : clientMsg.chipType === 'black'
+                ? 'schwarzen 10er'
+                : 'weißen 1er';
           this.broadcastNotification(
             `${pName} hat einen ${chipLabel}-Chip abgegeben! 🎉`,
             'success'
@@ -271,7 +285,7 @@ export class GameRoom extends DurableObject<Env> {
         }
 
         case 'EXCHANGE_CHIPS': {
-          nextState = exchangeWhiteForBlack(state, sessionId);
+          nextState = exchangeChipsUp(state, sessionId, clientMsg.from ?? 'white');
           break;
         }
 

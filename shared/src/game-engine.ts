@@ -2,44 +2,142 @@ import { createDeck, shuffleDeck } from './deck.js';
 import type {
   CardValue,
   ChipCount,
+  ChipType,
   ClientOpponentView,
   ClientRoomView,
   GameState,
+  GameVariant,
   Player,
   RoundPlayerScore,
 } from './types.js';
 
+export type PlayableBase = number | 'L';
+
+/** Pluskarte? (z. B. '3+') */
+export function isPlusCard(card: CardValue): boolean {
+  return typeof card === 'string' && card.endsWith('+');
+}
+
+/** Zahlenwert einer Pluskarte (1+ -> 1). */
+export function plusBaseValue(card: CardValue): number | null {
+  if (!isPlusCard(card)) return null;
+  return Number((card as string)[0]);
+}
+
+/**
+ * Basiswert für Legeregeln: Pluskarten zählen als ihre Zahl,
+ * das pinke Lama (PL) als Sonderkarte (Joker beim Ablegen).
+ */
+function normalizedTop(topCard: CardValue): PlayableBase | 'PL' {
+  if (topCard === 'PL') return 'PL';
+  if (isPlusCard(topCard)) {
+    const base = plusBaseValue(topCard);
+    if (base !== null) return base as PlayableBase;
+  }
+  return topCard as PlayableBase;
+}
+
+function normalizedCandidate(candidate: CardValue): PlayableBase | 'PL' {
+  if (candidate === 'PL') return 'PL';
+  if (isPlusCard(candidate)) {
+    const base = plusBaseValue(candidate);
+    if (base !== null) return base as PlayableBase;
+  }
+  return candidate as PlayableBase;
+}
+
 export function canPlayCard(topCard: CardValue, candidate: CardValue): boolean {
-  if (topCard === 'L') {
-    return candidate === 'L' || candidate === 1;
+  // Pinkes Lama passt immer (Joker).
+  if (candidate === 'PL') return true;
+
+  const top = normalizedTop(topCard);
+  const cand = normalizedCandidate(candidate);
+
+  // Auf pinkes Lama nur Lama oder 1 (Plus-1 zählt als 1).
+  if (top === 'PL') {
+    return cand === 'L' || cand === 1;
   }
-  if (topCard === 6) {
-    return candidate === 6 || candidate === 'L';
+  if (cand === 'PL') return true;
+  if (top === 'L') {
+    return cand === 'L' || cand === 1;
   }
-  return candidate === topCard || candidate === topCard + 1;
+  if (top === 6) {
+    return cand === 6 || cand === 'L';
+  }
+  if (cand === 'L') return false;
+  return cand === top || (typeof top === 'number' && cand === top + 1);
+}
+
+/** Basiswert für Solo-Einmaligkeit: Plus -> Zahl, PL -> 'L' (Lama-Gruppe). */
+function soloKey(card: CardValue): number | 'L' {
+  if (card === 'PL') return 'L';
+  if (isPlusCard(card)) {
+    return plusBaseValue(card) ?? (card as unknown as number);
+  }
+  return card as number | 'L';
+}
+
+function soloAlreadyPlayed(values: CardValue[] | null | undefined, card: CardValue): boolean {
+  if (!values) return false;
+  const key = soloKey(card);
+  return values.some((v) => soloKey(v) === key);
+}
+
+/** Sortierschlüssel für Client-Hand (1..6, Plus direkt nach Basis, L, PL zuletzt). */
+function cardSortKey(card: CardValue): number {
+  if (card === 'L') return 100;
+  if (card === 'PL') return 101;
+  if (isPlusCard(card)) {
+    return (plusBaseValue(card) ?? 0) + 0.5;
+  }
+  return card as number;
 }
 
 export function calculateUniquePoints(cards: CardValue[]): number {
-  const uniqueSet = new Set<CardValue>(cards);
-  let total = 0;
-  for (const card of uniqueSet) {
-    if (card === 'L') {
-      total += 10;
+  const seenNumbers = new Set<number>();
+  let hasLlama = false;
+  let hasPinkLlama = false;
+  for (const card of cards) {
+    if (card === 'PL') {
+      hasPinkLlama = true;
+    } else if (card === 'L') {
+      hasLlama = true;
+    } else if (isPlusCard(card)) {
+      const base = plusBaseValue(card);
+      if (base !== null) seenNumbers.add(base);
     } else {
-      total += card;
+      seenNumbers.add(card as number);
     }
+  }
+  let total = 0;
+  for (const n of seenNumbers) total += n;
+  if (hasPinkLlama) {
+    total += 20;
+  } else if (hasLlama) {
+    total += 10;
   }
   return total;
 }
 
-export function pointsToChips(points: number): ChipCount {
+export function pointsToChips(points: number, variant: GameVariant = 'classic'): ChipCount {
+  if (variant === 'party') {
+    const pink = Math.floor(points / 20);
+    const rest = points % 20;
+    const black = Math.floor(rest / 10);
+    const white = rest % 10;
+    return { white, black, pink };
+  }
   const black = Math.floor(points / 10);
   const white = points % 10;
-  return { white, black };
+  return { white, black, pink: 0 };
 }
 
 export function totalChipScore(chips: ChipCount): number {
-  return chips.white * 1 + chips.black * 10;
+  return chips.white * 1 + chips.black * 10 + (chips.pink ?? 0) * 20;
+}
+
+export function normalizeChips(chips: Partial<ChipCount> | undefined): ChipCount {
+  return { white: chips?.white ?? 0, black: chips?.black ?? 0, pink: chips?.pink ?? 0 };
 }
 
 export function isSoloEndspurt(state: GameState): boolean {
@@ -69,10 +167,15 @@ export function getNextActiveTurnIndex(
   return currentIndex;
 }
 
-export function createInitialGameState(roomCode: string, hostId: string): GameState {
+export function createInitialGameState(
+  roomCode: string,
+  hostId: string,
+  variant: GameVariant = 'classic'
+): GameState {
   return {
     roomCode,
     hostId,
+    variant,
     phase: 'LOBBY',
     roundNumber: 0,
     players: {},
@@ -89,6 +192,16 @@ export function createInitialGameState(roomCode: string, hostId: string): GameSt
   };
 }
 
+/** Migration alter States (ohne Variante / ohne pinke Chips). */
+export function migrateGameState(state: GameState): GameState {
+  const variant: GameVariant = state.variant ?? 'classic';
+  const players: Record<string, Player> = {};
+  for (const [pid, p] of Object.entries(state.players)) {
+    players[pid] = { ...p, chips: normalizeChips(p.chips) };
+  }
+  return { ...state, variant, players };
+}
+
 export function addPlayerToRoom(state: GameState, id: string, name: string): GameState {
   if (state.players[id]) {
     // Reconnection of existing player
@@ -99,6 +212,7 @@ export function addPlayerToRoom(state: GameState, id: string, name: string): Gam
         ...state.players,
         [id]: {
           ...existing,
+          chips: normalizeChips(existing.chips),
           name: name.trim() || existing.name,
           connected: true,
           status: existing.status === 'DISCONNECTED' ? 'ACTIVE' : existing.status,
@@ -118,7 +232,7 @@ export function addPlayerToRoom(state: GameState, id: string, name: string): Gam
   const newPlayer: Player = {
     id,
     name: name.trim() || `Spieler ${state.playerOrder.length + 1}`,
-    chips: { white: 0, black: 0 },
+    chips: { white: 0, black: 0, pink: 0 },
     totalScore: 0,
     hand: [],
     foldedHand: [],
@@ -141,7 +255,7 @@ export function startRound(state: GameState, starterPlayerId?: string): GameStat
     throw new Error('Es werden mindestens 2 Spieler benötigt.');
   }
 
-  const deck = shuffleDeck(createDeck());
+  const deck = shuffleDeck(createDeck(state.variant ?? 'classic'));
   const updatedPlayers: Record<string, Player> = {};
 
   // Deal 6 cards to each player
@@ -149,6 +263,7 @@ export function startRound(state: GameState, starterPlayerId?: string): GameStat
     const hand = deck.splice(0, 6);
     updatedPlayers[pid] = {
       ...state.players[pid],
+      chips: normalizeChips(state.players[pid]?.chips),
       hand,
       foldedHand: [],
       status: 'ACTIVE',
@@ -210,12 +325,12 @@ export function playCard(state: GameState, playerId: string, card: CardValue): G
   }
 
   const topCard = state.discardPile[state.discardPile.length - 1];
-  if (!canPlayCard(topCard, card)) {
+  if (topCard === undefined || !canPlayCard(topCard, card)) {
     throw new Error(`Karte ${card} kann nicht auf ${topCard} gelegt werden.`);
   }
 
-  // Solo-Endspurt: nur eine Karte pro Wert ablegbar.
-  if (isSoloEndspurt(state) && state.soloDiscardedValues?.includes(card)) {
+  // Solo-Endspurt: nur eine Karte pro Wert ablegbar (Plus zählt als Basiswert, PL als Lama).
+  if (isSoloEndspurt(state) && soloAlreadyPlayed(state.soloDiscardedValues, card)) {
     throw new Error('Im Solo-Endspurt wurde dieser Kartenwert bereits abgelegt.');
   }
 
@@ -249,6 +364,20 @@ export function playCard(state: GameState, playerId: string, card: CardValue): G
       },
       playerId
     );
+  }
+
+  // Party Edition: Pluskarte -> derselbe Spieler ist sofort nochmal an der Reihe.
+  if (isPlusCard(card)) {
+    return {
+      ...state,
+      discardPile: updatedDiscardPile,
+      soloDiscardedValues: soloValues,
+      players: {
+        ...state.players,
+        [playerId]: updatedPlayer,
+      },
+      turnIndex: state.turnIndex,
+    };
   }
 
   // Next player's turn
@@ -386,6 +515,7 @@ export function settleRound(
 ): GameState {
   const roundSummary: RoundPlayerScore[] = [];
   const updatedPlayers: Record<string, Player> = {};
+  const variant = state.variant ?? 'classic';
 
   const endingPlayerId =
     state.firstRoundExiterId ??
@@ -397,15 +527,17 @@ export function settleRound(
     const p = state.players[pid];
     const remainingCards = p.hand.length > 0 ? p.hand : p.foldedHand;
     const points = calculateUniquePoints(remainingCards);
-    const addedChips = pointsToChips(points);
+    const addedChips = pointsToChips(points, variant);
+    const baseChips = normalizeChips(p.chips);
 
-    const newWhite = p.chips.white + addedChips.white;
-    const newBlack = p.chips.black + addedChips.black;
-    const newTotal = newWhite * 1 + newBlack * 10;
+    const newWhite = baseChips.white + addedChips.white;
+    const newBlack = baseChips.black + addedChips.black;
+    const newPink = baseChips.pink + addedChips.pink;
+    const newTotal = newWhite * 1 + newBlack * 10 + newPink * 20;
 
     updatedPlayers[pid] = {
       ...p,
-      chips: { white: newWhite, black: newBlack },
+      chips: { white: newWhite, black: newBlack, pink: newPink },
       totalScore: newTotal,
       hand: [],
       foldedHand: remainingCards, // kept for summary
@@ -426,7 +558,10 @@ export function settleRound(
   let pendingChipDiscardPlayerId: string | null = null;
   if (finisherPlayerId) {
     const finisher = updatedPlayers[finisherPlayerId];
-    if (finisher && (finisher.chips.white > 0 || finisher.chips.black > 0)) {
+    if (
+      finisher &&
+      (finisher.chips.white > 0 || finisher.chips.black > 0 || finisher.chips.pink > 0)
+    ) {
       pendingChipDiscardPlayerId = finisherPlayerId;
     }
   }
@@ -453,17 +588,54 @@ export function settleRound(
 }
 
 export function exchangeWhiteForBlack(state: GameState, playerId: string): GameState {
+  return exchangeChipsUp(state, playerId, 'white');
+}
+
+/** Tausch aufwärts: 10 weiß -> 1 schwarz, 2 schwarz -> 1 pink (nur Party). */
+export function exchangeChipsUp(
+  state: GameState,
+  playerId: string,
+  from: 'white' | 'black' = 'white'
+): GameState {
   const player = state.players[playerId];
   if (!player) {
     throw new Error('Spieler nicht gefunden.');
   }
-  if (player.chips.white < 10) {
-    throw new Error('Mindestens 10 weiße Chips für den Tausch erforderlich.');
+  const chips = normalizeChips(player.chips);
+  if (from === 'white') {
+    if (chips.white < 10) {
+      throw new Error('Mindestens 10 weiße Chips für den Tausch erforderlich.');
+    }
+    const updated: ChipCount = {
+      white: chips.white - 10,
+      black: chips.black + 1,
+      pink: chips.pink,
+    };
+    const updatedPlayer: Player = {
+      ...player,
+      chips: updated,
+      totalScore: totalChipScore(updated),
+    };
+    return {
+      ...state,
+      players: { ...state.players, [playerId]: updatedPlayer },
+    };
   }
+  if ((state.variant ?? 'classic') !== 'party') {
+    throw new Error('Pinke Chips gibt es nur in der Party Edition.');
+  }
+  if (chips.black < 2) {
+    throw new Error('Mindestens 2 schwarze Chips für den Tausch in pink erforderlich.');
+  }
+  const updated: ChipCount = {
+    white: chips.white,
+    black: chips.black - 2,
+    pink: chips.pink + 1,
+  };
   const updatedPlayer: Player = {
     ...player,
-    chips: { white: player.chips.white - 10, black: player.chips.black + 1 },
-    totalScore: player.chips.white - 10 + (player.chips.black + 1) * 10,
+    chips: updated,
+    totalScore: totalChipScore(updated),
   };
   return {
     ...state,
@@ -478,7 +650,7 @@ export function resetGameForNewMatch(state: GameState): GameState {
     if (!p) continue;
     updatedPlayers[pid] = {
       ...p,
-      chips: { white: 0, black: 0 },
+      chips: { white: 0, black: 0, pink: 0 },
       totalScore: 0,
       hand: [],
       foldedHand: [],
@@ -527,7 +699,7 @@ export function removePlayerFromLobby(state: GameState, playerId: string): GameS
 export function discardBonusChip(
   state: GameState,
   playerId: string,
-  chipType: 'white' | 'black'
+  chipType: ChipType
 ): GameState {
   if (state.pendingChipDiscardPlayerId !== playerId) {
     throw new Error('Du bist nicht berechtigt, einen Bonus-Chip abzugeben.');
@@ -537,21 +709,28 @@ export function discardBonusChip(
   if (!player) {
     throw new Error('Spieler nicht gefunden.');
   }
+  const chips = normalizeChips(player.chips);
 
-  if (chipType === 'white' && player.chips.white <= 0) {
+  if (chipType === 'white' && chips.white <= 0) {
     throw new Error('Du hast keinen weißen Chip zum Abgeben.');
   }
-  if (chipType === 'black' && player.chips.black <= 0) {
+  if (chipType === 'black' && chips.black <= 0) {
     throw new Error('Du hast keinen schwarzen Chip zum Abgeben.');
   }
+  if (chipType === 'pink' && chips.pink <= 0) {
+    throw new Error('Du hast keinen pinken Chip zum Abgeben.');
+  }
 
-  const newWhite = chipType === 'white' ? player.chips.white - 1 : player.chips.white;
-  const newBlack = chipType === 'black' ? player.chips.black - 1 : player.chips.black;
-  const newTotal = newWhite * 1 + newBlack * 10;
+  const updated: ChipCount = {
+    white: chipType === 'white' ? chips.white - 1 : chips.white,
+    black: chipType === 'black' ? chips.black - 1 : chips.black,
+    pink: chipType === 'pink' ? chips.pink - 1 : chips.pink,
+  };
+  const newTotal = totalChipScore(updated);
 
   const updatedPlayer: Player = {
     ...player,
-    chips: { white: newWhite, black: newBlack },
+    chips: updated,
     totalScore: newTotal,
   };
 
@@ -600,10 +779,11 @@ export function determineWinners(players: Record<string, Player>): string[] {
 }
 
 export function filterStateForClient(state: GameState, viewerSessionId: string): ClientRoomView {
-  const viewer = state.players[viewerSessionId] || {
+  const migrated = state.variant ? state : migrateGameState(state);
+  const viewer = migrated.players[viewerSessionId] || {
     id: viewerSessionId,
     name: 'Zuschauer',
-    chips: { white: 0, black: 0 },
+    chips: { white: 0, black: 0, pink: 0 },
     totalScore: 0,
     hand: [],
     foldedHand: [],
@@ -611,67 +791,64 @@ export function filterStateForClient(state: GameState, viewerSessionId: string):
     connected: true,
   };
 
-  const currentTurnPlayerId = state.playerOrder[state.turnIndex];
-  const isMyTurn = state.phase === 'IN_ROUND' && currentTurnPlayerId === viewerSessionId;
+  const currentTurnPlayerId = migrated.playerOrder[migrated.turnIndex];
+  const isMyTurn = migrated.phase === 'IN_ROUND' && currentTurnPlayerId === viewerSessionId;
   const topDiscardCard =
-    state.discardPile.length > 0 ? state.discardPile[state.discardPile.length - 1] : null;
+    migrated.discardPile.length > 0 ? migrated.discardPile[migrated.discardPile.length - 1] : null;
 
   const validPlays: CardValue[] = [];
-  const solo = isSoloEndspurt(state);
+  const solo = isSoloEndspurt(migrated);
   if (isMyTurn && topDiscardCard !== null && viewer.status === 'ACTIVE') {
     const uniqueCardsInHand = Array.from(new Set(viewer.hand));
     for (const card of uniqueCardsInHand) {
-      if (!canPlayCard(topDiscardCard, card)) continue;
-      if (solo && state.soloDiscardedValues?.includes(card)) continue;
+      if (topDiscardCard === undefined || !canPlayCard(topDiscardCard, card)) continue;
+      if (solo && soloAlreadyPlayed(migrated.soloDiscardedValues, card)) continue;
       validPlays.push(card);
     }
   }
 
-  const canDraw = isMyTurn && viewer.status === 'ACTIVE' && state.drawPile.length > 0 && !solo;
+  const canDraw = isMyTurn && viewer.status === 'ACTIVE' && migrated.drawPile.length > 0 && !solo;
   const canFold = isMyTurn && viewer.status === 'ACTIVE';
 
-  const opponents: ClientOpponentView[] = state.playerOrder
+  const opponents: ClientOpponentView[] = migrated.playerOrder
     .filter((id) => id !== viewerSessionId)
     .map((id) => {
-      const opp = state.players[id];
+      const opp = migrated.players[id];
       const cardCount = opp.hand.length > 0 ? opp.hand.length : opp.foldedHand.length;
       return {
         id: opp.id,
         name: opp.name,
-        chips: opp.chips,
+        chips: normalizeChips(opp.chips),
         totalScore: opp.totalScore,
         cardCount,
         status: opp.status,
         connected: opp.connected,
-        isTurn: state.phase === 'IN_ROUND' && currentTurnPlayerId === opp.id,
+        isTurn: migrated.phase === 'IN_ROUND' && currentTurnPlayerId === opp.id,
       };
     });
 
   let winnersFormatted: { id: string; name: string; score: number }[] | null = null;
-  if (state.winners) {
-    winnersFormatted = state.winners.map((wid) => ({
+  if (migrated.winners) {
+    winnersFormatted = migrated.winners.map((wid) => ({
       id: wid,
-      name: state.players[wid]?.name || 'Unbekannt',
-      score: state.players[wid]?.totalScore ?? 0,
+      name: migrated.players[wid]?.name || 'Unbekannt',
+      score: migrated.players[wid]?.totalScore ?? 0,
     }));
   }
 
   return {
-    roomCode: state.roomCode,
-    hostId: state.hostId,
-    isHost: state.hostId === viewerSessionId,
-    phase: state.phase,
-    roundNumber: state.roundNumber,
+    roomCode: migrated.roomCode,
+    hostId: migrated.hostId,
+    variant: migrated.variant ?? 'classic',
+    isHost: migrated.hostId === viewerSessionId,
+    phase: migrated.phase,
+    roundNumber: migrated.roundNumber,
     myPlayer: {
       id: viewer.id,
       name: viewer.name,
-      chips: viewer.chips,
+      chips: normalizeChips(viewer.chips),
       totalScore: viewer.totalScore,
-      hand: [...viewer.hand].sort((a, b) => {
-        if (a === 'L') return 1;
-        if (b === 'L') return -1;
-        return a - b;
-      }),
+      hand: [...viewer.hand].sort((a, b) => cardSortKey(a) - cardSortKey(b)),
       status: viewer.status,
       isTurn: isMyTurn,
       validPlays,
@@ -679,13 +856,13 @@ export function filterStateForClient(state: GameState, viewerSessionId: string):
       canFold,
     },
     opponents,
-    topDiscardCard,
-    discardPileCount: state.discardPile.length,
-    drawPileCount: state.drawPile.length,
+    topDiscardCard: topDiscardCard ?? null,
+    discardPileCount: migrated.discardPile.length,
+    drawPileCount: migrated.drawPile.length,
     isSoloEndspurt: solo,
-    soloDiscardedValues: state.soloDiscardedValues,
-    pendingChipDiscardPlayerId: state.pendingChipDiscardPlayerId,
-    lastRoundSummary: state.lastRoundSummary,
+    soloDiscardedValues: migrated.soloDiscardedValues,
+    pendingChipDiscardPlayerId: migrated.pendingChipDiscardPlayerId,
+    lastRoundSummary: migrated.lastRoundSummary,
     winners: winnersFormatted,
   };
 }

@@ -1,4 +1,4 @@
-import type { ClientRoomView } from '@lama/shared';
+import type { ChipType, ClientRoomView } from '@lama/shared';
 import confetti from 'canvas-confetti';
 import { ArrowRight, Sparkles, Trophy } from 'lucide-react';
 import type React from 'react';
@@ -8,7 +8,7 @@ import { Card } from './Card.js';
 
 interface RoundSummaryModalProps {
   state: ClientRoomView;
-  onDiscardChip: (chipType: 'white' | 'black') => void;
+  onDiscardChip: (chipType: ChipType) => void;
   onNextRound: () => void;
   onNewGame: () => void;
   onLeaveRoom: () => void;
@@ -102,6 +102,19 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
               Als Belohnung darfst du einen deiner Chips abgeben:
             </span>
             <div className="flex items-center gap-4">
+              {(state.myPlayer.chips.pink ?? 0) > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onDiscardChip('pink')}
+                  data-testid="discard-pink-chip"
+                  className="px-4 py-2 min-h-[44px] rounded-xl bg-pink-500 text-pink-950 font-black text-sm flex items-center gap-2 shadow-lg hover:scale-105 transition-all cursor-pointer"
+                >
+                  <span className="w-5 h-5 rounded-full bg-pink-300 border border-pink-700 flex items-center justify-center text-xs">
+                    20
+                  </span>
+                  <span>Pinken 20er abgeben (-20 Pkt.)</span>
+                </button>
+              )}
               {state.myPlayer.chips.black > 0 && (
                 <button
                   type="button"
@@ -155,7 +168,13 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
                   )}
                   {score.bonusChipReturned && (
                     <span className="text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">
-                      -{score.bonusChipReturned === 'black' ? 10 : 1} Chip-Bonus!
+                      -
+                      {score.bonusChipReturned === 'pink'
+                        ? 20
+                        : score.bonusChipReturned === 'black'
+                          ? 10
+                          : 1}{' '}
+                      Chip-Bonus!
                     </span>
                   )}
                 </div>

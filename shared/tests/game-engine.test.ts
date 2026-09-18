@@ -143,7 +143,7 @@ describe('LAMA Game Engine Rules', () => {
       state = startRound(state, 'p1');
 
       // Alice has previously collected chips
-      state.players.p1.chips = { white: 3, black: 1 };
+      state.players.p1.chips = { white: 3, black: 1, pink: 0 };
       state.players.p1.totalScore = 13;
       state.players.p1.hand = [3];
       state.discardPile = [2];
@@ -160,13 +160,13 @@ describe('LAMA Game Engine Rules', () => {
 
       // Alice discards her black (10) chip!
       state = discardBonusChip(state, 'p1', 'black');
-      expect(state.players.p1.chips).toEqual({ white: 3, black: 0 });
+      expect(state.players.p1.chips).toEqual({ white: 3, black: 0, pink: 0 });
       expect(state.players.p1.totalScore).toBe(3);
       expect(state.pendingChipDiscardPlayerId).toBeNull();
       expect(state.phase).toBe('ROUND_SUMMARY');
 
       // Bob's points should be 14 (1 black, 4 white)
-      expect(state.players.p2.chips).toEqual({ white: 4, black: 1 });
+      expect(state.players.p2.chips).toEqual({ white: 4, black: 1, pink: 0 });
       expect(state.players.p2.totalScore).toBe(14);
     });
 
@@ -177,7 +177,7 @@ describe('LAMA Game Engine Rules', () => {
       state = startRound(state, 'p1');
 
       // Bob already has 35 points
-      state.players.p2.chips = { white: 5, black: 3 };
+      state.players.p2.chips = { white: 5, black: 3, pink: 0 };
       state.players.p2.totalScore = 35;
       state.players.p2.hand = ['L']; // +10 points -> 45 >= 40
 

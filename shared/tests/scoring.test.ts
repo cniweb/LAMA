@@ -28,27 +28,27 @@ describe('LAMA Scoring & Chips', () => {
   });
 
   it('converts points to black (10) and white (1) chips correctly', () => {
-    expect(pointsToChips(0)).toEqual({ white: 0, black: 0 });
-    expect(pointsToChips(4)).toEqual({ white: 4, black: 0 });
-    expect(pointsToChips(10)).toEqual({ white: 0, black: 1 });
-    expect(pointsToChips(14)).toEqual({ white: 4, black: 1 });
-    expect(pointsToChips(29)).toEqual({ white: 9, black: 2 });
+    expect(pointsToChips(0)).toEqual({ white: 0, black: 0, pink: 0 });
+    expect(pointsToChips(4)).toEqual({ white: 4, black: 0, pink: 0 });
+    expect(pointsToChips(10)).toEqual({ white: 0, black: 1, pink: 0 });
+    expect(pointsToChips(14)).toEqual({ white: 4, black: 1, pink: 0 });
+    expect(pointsToChips(29)).toEqual({ white: 9, black: 2, pink: 0 });
   });
 
   it('calculates total chip score properly', () => {
-    expect(totalChipScore({ white: 4, black: 1 })).toBe(14);
-    expect(totalChipScore({ white: 8, black: 3 })).toBe(38);
+    expect(totalChipScore({ white: 4, black: 1, pink: 0 })).toBe(14);
+    expect(totalChipScore({ white: 8, black: 3, pink: 0 })).toBe(38);
   });
 
   it('tauscht manuell 10 weiße gegen 1 schwarzen (total invariant)', () => {
     let state = createInitialGameState('LAMA', 'p1');
     state = addPlayerToRoom(state, 'p1', 'Alice');
     state = addPlayerToRoom(state, 'p2', 'Bob');
-    state.players.p1.chips = { white: 12, black: 0 };
+    state.players.p1.chips = { white: 12, black: 0, pink: 0 };
     state.players.p1.totalScore = 12;
 
     state = exchangeWhiteForBlack(state, 'p1');
-    expect(state.players.p1.chips).toEqual({ white: 2, black: 1 });
+    expect(state.players.p1.chips).toEqual({ white: 2, black: 1, pink: 0 });
     expect(state.players.p1.totalScore).toBe(12);
   });
 
@@ -56,7 +56,7 @@ describe('LAMA Scoring & Chips', () => {
     let state = createInitialGameState('LAMA', 'p1');
     state = addPlayerToRoom(state, 'p1', 'Alice');
     state = addPlayerToRoom(state, 'p2', 'Bob');
-    state.players.p1.chips = { white: 9, black: 0 };
+    state.players.p1.chips = { white: 9, black: 0, pink: 0 };
     expect(() => exchangeWhiteForBlack(state, 'p1')).toThrow(/10 weiße/);
   });
 
@@ -64,7 +64,7 @@ describe('LAMA Scoring & Chips', () => {
     let state = createInitialGameState('LAMA', 'p1');
     state = addPlayerToRoom(state, 'p1', 'Alice');
     state = addPlayerToRoom(state, 'p2', 'Bob');
-    state.players.p1.chips = { white: 3, black: 1 };
+    state.players.p1.chips = { white: 3, black: 1, pink: 0 };
     state.players.p1.totalScore = 13;
     state.roundNumber = 2;
 
@@ -72,7 +72,7 @@ describe('LAMA Scoring & Chips', () => {
     expect(state.phase).toBe('LOBBY');
     expect(state.roundNumber).toBe(0);
     expect(state.playerOrder).toEqual(['p1', 'p2']);
-    expect(state.players.p1.chips).toEqual({ white: 0, black: 0 });
+    expect(state.players.p1.chips).toEqual({ white: 0, black: 0, pink: 0 });
     expect(state.players.p1.totalScore).toBe(0);
     expect(state.lastRoundSummary).toBeNull();
     expect(state.winners).toBeNull();

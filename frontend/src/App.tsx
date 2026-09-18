@@ -1,3 +1,4 @@
+import type { GameVariant } from '@lama/shared';
 import { HelpCircle, LogOut, Sparkles, Wifi, WifiOff } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { DiscardPile } from './components/DiscardPile.js';
@@ -23,10 +24,12 @@ export function App() {
   );
   const [rulesOpen, setRulesOpen] = useState(false);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [variant, setVariant] = useState<GameVariant>('classic');
 
   const { state, isConnected, error, notification, actions } = useGameSocket(
     hasJoined ? roomCode : null,
-    playerName
+    playerName,
+    variant
   );
 
   useEffect(() => {
@@ -35,13 +38,17 @@ export function App() {
     }
   }, [playerName]);
 
-  // Handle room creation
+  // Handle room creation (Variante fix bei Erstellung)
   const handleCreateRoom = async () => {
     if (!playerName.trim()) return;
     setIsCreatingRoom(true);
     try {
-      const res = await fetch('/api/room/create', { method: 'POST' });
-      const data = (await res.json()) as { roomCode: string };
+      const res = await fetch('/api/room/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ variant }),
+      });
+      const data = (await res.json()) as { roomCode: string; variant?: GameVariant };
       setRoomCode(data.roomCode);
       setHasJoined(true);
     } catch (e) {
@@ -118,6 +125,52 @@ export function App() {
 
             {roomCode === null ? (
               <>
+                <fieldset>
+                  <legend className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Spielvariante
+                  </legend>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label
+                      className={`px-3 py-2.5 rounded-xl border font-bold text-sm transition cursor-pointer text-center ${
+                        variant === 'classic'
+                          ? 'bg-amber-400/20 border-amber-400 text-amber-300'
+                          : 'bg-slate-950 border-slate-700 text-slate-400 hover:border-slate-500'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="game-variant"
+                        value="classic"
+                        checked={variant === 'classic'}
+                        onChange={() => setVariant('classic')}
+                        className="sr-only"
+                      />
+                      🦙 Klassik
+                    </label>
+                    <label
+                      className={`px-3 py-2.5 rounded-xl border font-bold text-sm transition cursor-pointer text-center ${
+                        variant === 'party'
+                          ? 'bg-pink-500/20 border-pink-400 text-pink-300'
+                          : 'bg-slate-950 border-slate-700 text-slate-400 hover:border-slate-500'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="game-variant"
+                        value="party"
+                        checked={variant === 'party'}
+                        onChange={() => setVariant('party')}
+                        className="sr-only"
+                      />
+                      🎉 Party Edition
+                    </label>
+                  </div>
+                  {variant === 'party' && (
+                    <p className="mt-1.5 text-[11px] text-pink-300/80 font-semibold">
+                      Mit Pluskarten (Extra-Zug!), pinkem Lama-Joker und 20er-Chips.
+                    </p>
+                  )}
+                </fieldset>
                 <button
                   type="button"
                   disabled={!playerName.trim() || isCreatingRoom}
@@ -211,6 +264,14 @@ export function App() {
                   className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold"
                 >
                   Durchgang {state.roundNumber}
+                </span>
+              ) : null}
+              {state?.variant === 'party' ? (
+                <span
+                  data-testid="variant-badge"
+                  className="text-xs px-2 py-0.5 rounded-full bg-pink-500/20 border border-pink-400/50 text-pink-300 font-bold"
+                >
+                  🎉 Party
                 </span>
               ) : null}
             </div>
@@ -315,6 +376,7 @@ export function App() {
             canFold={state.myPlayer.canFold}
             isSoloEndspurt={state.isSoloEndspurt}
             soloDiscardedValues={state.soloDiscardedValues}
+            isParty={state.variant === 'party'}
             onPlayCard={actions.playCard}
             onDrawCard={actions.drawCard}
             onFold={actions.fold}
