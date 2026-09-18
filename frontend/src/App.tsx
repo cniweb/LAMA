@@ -63,10 +63,26 @@ export function App() {
   };
 
   const handleLeaveRoom = () => {
+    actions.leaveRoom();
     setHasJoined(false);
     setRoomCode(null);
     window.history.replaceState({}, '', '/');
   };
+
+  // Warnung beim Schließen/Neuladen während eines laufenden Durchgangs.
+  useEffect(() => {
+    if (!hasJoined || state?.phase !== 'IN_ROUND') {
+      return;
+    }
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => {
+      window.removeEventListener('beforeunload', handler);
+    };
+  }, [hasJoined, state?.phase]);
 
   // Welcome / Join Screen
   if (!hasJoined || !roomCode) {
@@ -298,9 +314,11 @@ export function App() {
             canDraw={state.myPlayer.canDraw}
             canFold={state.myPlayer.canFold}
             isSoloEndspurt={state.isSoloEndspurt}
+            soloDiscardedValues={state.soloDiscardedValues}
             onPlayCard={actions.playCard}
             onDrawCard={actions.drawCard}
             onFold={actions.fold}
+            onExchangeChips={actions.exchangeChips}
           />
 
           {/* Round Summary & Chip Discard Modal */}
@@ -309,6 +327,8 @@ export function App() {
               state={state}
               onDiscardChip={actions.discardChip}
               onNextRound={actions.nextRound}
+              onNewGame={actions.newGame}
+              onLeaveRoom={handleLeaveRoom}
             />
           </Suspense>
         </main>

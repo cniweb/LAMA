@@ -41,6 +41,8 @@ export interface GameState {
   drawPile: CardValue[];
   discardPile: CardValue[];
   lastRoundFinisherId: string | null;
+  firstRoundExiterId: string | null;
+  soloDiscardedValues: CardValue[] | null;
   pendingChipDiscardPlayerId: string | null;
   lastRoundSummary: RoundPlayerScore[] | null;
   winners: string[] | null;
@@ -80,6 +82,7 @@ export interface ClientRoomView {
   discardPileCount: number;
   drawPileCount: number;
   isSoloEndspurt: boolean;
+  soloDiscardedValues: CardValue[] | null;
   pendingChipDiscardPlayerId: string | null;
   lastRoundSummary: RoundPlayerScore[] | null;
   winners: { id: string; name: string; score: number }[] | null;
@@ -92,7 +95,10 @@ export type ClientMessage =
   | { type: 'DRAW_CARD' }
   | { type: 'FOLD' }
   | { type: 'DISCARD_CHIP'; chipType: 'white' | 'black' }
-  | { type: 'NEXT_ROUND' };
+  | { type: 'NEXT_ROUND' }
+  | { type: 'EXCHANGE_CHIPS' }
+  | { type: 'NEW_GAME' }
+  | { type: 'LEAVE_ROOM' };
 
 export type ServerMessage =
   | { type: 'STATE_UPDATE'; state: ClientRoomView }

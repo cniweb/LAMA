@@ -10,6 +10,7 @@ import {
   foldPlayer,
   isSoloEndspurt,
   playCard,
+  removePlayerFromLobby,
   startRound,
 } from '../src/game-engine.js';
 
@@ -187,6 +188,81 @@ describe('LAMA Game Engine Rules', () => {
       state = playCard(state, 'p1', 2);
       expect(state.phase).toBe('GAME_OVER');
       expect(state.winners).toEqual(['p1']);
+    });
+
+    it('Solo-Endspurt: nur eine Karte pro Wert ablegbar', () => {
+      let state = createInitialGameState('LAMA', 'p1');
+      state = addPlayerToRoom(state, 'p1', 'Alice');
+      state = addPlayerToRoom(state, 'p2', 'Bob');
+      state = startRound(state, 'p1');
+
+      // Alice steigt aus → Bob im Solo
+      state.turnIndex = 0;
+      state.players.p1.hand = [1];
+      state = foldPlayer(state, 'p1');
+      expect(isSoloEndspurt(state)).toBe(true);
+      expect(state.soloDiscardedValues).toEqual([]);
+
+      // Bob legt 3 auf 2 → ok
+      state.players.p2.hand = [3, 3, 4];
+      state.discardPile = [2];
+      state.turnIndex = 1;
+      state = playCard(state, 'p2', 3);
+      expect(state.soloDiscardedValues).toEqual([3]);
+
+      // Zweite 3 auf 3 → blockiert (Solo-Einmaligkeit), Runde läuft weiter
+      state.players.p2.hand = [3, 4];
+      state.turnIndex = 1;
+      // Turn auf Bob zurücksetzen (playCard gab Zug weiter, aber nur Bob aktiv)
+      state.turnIndex = state.playerOrder.indexOf('p2');
+      state.players.p2.status = 'ACTIVE';
+      expect(() => playCard(state, 'p2', 3)).toThrow(/bereits abgelegt/);
+
+      // 4 auf 3 → ok
+      state = playCard(state, 'p2', 4);
+      expect(state.soloDiscardedValues).toEqual([3, 4]);
+
+      // validPlays blendet wiederholte Werte aus
+      state.players.p2.hand = [4, 5];
+      state.turnIndex = state.playerOrder.indexOf('p2');
+      const view = filterStateForClient(state, 'p2');
+      expect(view.myPlayer.validPlays).not.toContain(4);
+      expect(view.myPlayer.validPlays).toContain(5);
+    });
+
+    it('erster Aussteiger beginnt die nächste Runde (alle ausgestiegen)', () => {
+      let state = createInitialGameState('LAMA', 'p1');
+      state = addPlayerToRoom(state, 'p1', 'Alice');
+      state = addPlayerToRoom(state, 'p2', 'Bob');
+      state = addPlayerToRoom(state, 'p3', 'Cara');
+      state = startRound(state, 'p1');
+
+      state.turnIndex = 0;
+      state.players.p1.hand = [1];
+      state = foldPlayer(state, 'p1');
+      expect(state.firstRoundExiterId).toBe('p1');
+
+      state.turnIndex = state.playerOrder.indexOf('p2');
+      state.players.p2.hand = [2];
+      state = foldPlayer(state, 'p2');
+
+      state.turnIndex = state.playerOrder.indexOf('p3');
+      state.players.p3.hand = [3];
+      state = foldPlayer(state, 'p3');
+
+      // Alle ausgestiegen → Starter nächste Runde = erste Aussteigerin Alice
+      expect(state.lastRoundFinisherId).toBe('p1');
+      const next = startRound(state);
+      expect(next.turnIndex).toBe(next.playerOrder.indexOf('p1'));
+    });
+
+    it('removePlayerFromLobby löscht Slot hart (nur LOBBY)', () => {
+      let state = createInitialGameState('LAMA', 'p1');
+      state = addPlayerToRoom(state, 'p1', 'Alice');
+      state = addPlayerToRoom(state, 'p2', 'Bob');
+      state = removePlayerFromLobby(state, 'p2');
+      expect(state.playerOrder).toEqual(['p1']);
+      expect(state.players.p2).toBeUndefined();
     });
   });
 

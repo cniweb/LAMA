@@ -14,9 +14,11 @@ interface PlayerHandProps {
   canDraw: boolean;
   canFold: boolean;
   isSoloEndspurt: boolean;
+  soloDiscardedValues?: CardValue[] | null;
   onPlayCard: (card: CardValue) => void;
   onDrawCard: () => void;
   onFold: () => void;
+  onExchangeChips?: () => void;
 }
 
 export const PlayerHand: React.FC<PlayerHandProps> = ({
@@ -29,9 +31,11 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   canDraw,
   canFold,
   isSoloEndspurt,
+  soloDiscardedValues,
   onPlayCard,
   onDrawCard,
   onFold,
+  onExchangeChips,
 }) => {
   const isFolded = status === 'FOLDED';
 
@@ -42,6 +46,17 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
         <div className="flex items-center gap-2">
           <span className="text-xs sm:text-sm font-extrabold text-slate-300">Deine Chips:</span>
           <ChipDisplay chips={chips} totalScore={totalScore} size="sm" />
+          {onExchangeChips && chips.white >= 10 && (
+            <button
+              type="button"
+              onClick={onExchangeChips}
+              data-testid="exchange-chips-button"
+              className="px-2.5 py-1.5 min-h-[44px] rounded-lg bg-slate-800 hover:bg-slate-700 border border-amber-400/40 text-amber-300 font-bold text-xs shadow transition-all cursor-pointer hover:scale-105"
+              title="10 weiße Chips gegen 1 schwarzen Chip tauschen"
+            >
+              10→1 tauschen
+            </button>
+          )}
         </div>
 
         {isTurn ? (
@@ -89,7 +104,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       {/* Solo Endspurt Notice */}
       {isTurn && isSoloEndspurt && (
         <div className="text-[11px] sm:text-xs font-extrabold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-bounce">
-          ⚡ Solo-Endspurt! Alle anderen sind ausgestiegen. Du darfst nicht mehr nachziehen!
+          ⚡ Solo-Endspurt! Kein Nachziehen, jeder Wert nur 1× ablegbar!
+          {soloDiscardedValues && soloDiscardedValues.length > 0 && (
+            <span> Bereits gelegt: {soloDiscardedValues.join(', ')}</span>
+          )}
         </div>
       )}
 

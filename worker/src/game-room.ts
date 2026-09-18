@@ -6,13 +6,17 @@ import {
   createInitialGameState,
   discardBonusChip,
   drawCard,
+  exchangeWhiteForBlack,
   filterStateForClient,
   foldPlayer,
   type GameState,
+  getNextActiveTurnIndex,
   isRoomExpired,
   MAX_MESSAGE_BYTES,
   playCard,
   ROOM_TTL_MS,
+  removePlayerFromLobby,
+  resetGameForNewMatch,
   type ServerMessage,
   startRound,
 } from '@lama/shared';
@@ -263,6 +267,52 @@ export class GameRoom extends DurableObject<Env> {
           }
           nextState = startRound(state, state.lastRoundFinisherId || undefined);
           this.broadcastNotification(`Durchgang ${nextState.roundNumber} gestartet!`, 'info');
+          break;
+        }
+
+        case 'EXCHANGE_CHIPS': {
+          nextState = exchangeWhiteForBlack(state, sessionId);
+          break;
+        }
+
+        case 'NEW_GAME': {
+          if (state.phase !== 'ROUND_SUMMARY' && state.phase !== 'GAME_OVER') {
+            throw new Error('Neues Spiel erst nach Rundenende möglich.');
+          }
+          // Bewusst kein Host-Check: Button sehen/auslösen dürfen alle.
+          nextState = resetGameForNewMatch(state);
+          this.broadcastNotification('Neues Spiel! Alle Punkte zurückgesetzt.', 'info');
+          break;
+        }
+
+        case 'LEAVE_ROOM': {
+          if (state.phase === 'LOBBY') {
+            nextState = removePlayerFromLobby(state, sessionId);
+            if (nextState.playerOrder.length === 0) {
+              await this.saveState(nextState);
+              this.broadcastState();
+              return;
+            }
+          } else {
+            // Läuft die Partie: nur als getrennt markieren (Reconnect möglich).
+            const p = state.players[sessionId];
+            if (p) {
+              const updatedPlayers = {
+                ...state.players,
+                [sessionId]: { ...p, connected: false, status: 'DISCONNECTED' as const },
+              };
+              let turnIndex = state.turnIndex;
+              const currentId = state.playerOrder[state.turnIndex];
+              if (currentId === sessionId) {
+                turnIndex = getNextActiveTurnIndex(
+                  state.playerOrder,
+                  updatedPlayers,
+                  state.turnIndex
+                );
+              }
+              nextState = { ...state, players: updatedPlayers, turnIndex };
+            }
+          }
           break;
         }
 

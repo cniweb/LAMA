@@ -81,6 +81,8 @@ export function createInitialGameState(roomCode: string, hostId: string): GameSt
     drawPile: [],
     discardPile: [],
     lastRoundFinisherId: null,
+    firstRoundExiterId: null,
+    soloDiscardedValues: null,
     pendingChipDiscardPlayerId: null,
     lastRoundSummary: null,
     winners: null,
@@ -90,14 +92,16 @@ export function createInitialGameState(roomCode: string, hostId: string): GameSt
 export function addPlayerToRoom(state: GameState, id: string, name: string): GameState {
   if (state.players[id]) {
     // Reconnection of existing player
+    const existing = state.players[id];
     return {
       ...state,
       players: {
         ...state.players,
         [id]: {
-          ...state.players[id],
-          name: name.trim() || state.players[id].name,
+          ...existing,
+          name: name.trim() || existing.name,
           connected: true,
+          status: existing.status === 'DISCONNECTED' ? 'ACTIVE' : existing.status,
         },
       },
     };
@@ -177,6 +181,8 @@ export function startRound(state: GameState, starterPlayerId?: string): GameStat
     turnIndex,
     drawPile,
     discardPile,
+    firstRoundExiterId: null,
+    soloDiscardedValues: null,
     pendingChipDiscardPlayerId: null,
     lastRoundSummary: null,
     winners: null,
@@ -208,6 +214,11 @@ export function playCard(state: GameState, playerId: string, card: CardValue): G
     throw new Error(`Karte ${card} kann nicht auf ${topCard} gelegt werden.`);
   }
 
+  // Solo-Endspurt: nur eine Karte pro Wert ablegbar.
+  if (isSoloEndspurt(state) && state.soloDiscardedValues?.includes(card)) {
+    throw new Error('Im Solo-Endspurt wurde dieser Kartenwert bereits abgelegt.');
+  }
+
   // Remove card from hand
   const newHand = [...player.hand];
   newHand.splice(cardIndex, 1);
@@ -218,6 +229,10 @@ export function playCard(state: GameState, playerId: string, card: CardValue): G
   };
 
   const updatedDiscardPile = [...state.discardPile, card];
+  const soloValues =
+    isSoloEndspurt(state) || getActivePlayerCount(state) === 1
+      ? [...(state.soloDiscardedValues ?? []), card]
+      : state.soloDiscardedValues;
 
   // Did the player discard their last card?
   if (newHand.length === 0) {
@@ -225,6 +240,8 @@ export function playCard(state: GameState, playerId: string, card: CardValue): G
       {
         ...state,
         discardPile: updatedDiscardPile,
+        soloDiscardedValues: soloValues,
+        firstRoundExiterId: state.firstRoundExiterId ?? playerId,
         players: {
           ...state.players,
           [playerId]: updatedPlayer,
@@ -244,6 +261,7 @@ export function playCard(state: GameState, playerId: string, card: CardValue): G
   return {
     ...state,
     discardPile: updatedDiscardPile,
+    soloDiscardedValues: soloValues,
     players: {
       ...state.players,
       [playerId]: updatedPlayer,
@@ -331,15 +349,19 @@ export function foldPlayer(state: GameState, playerId: string): GameState {
     (id) => updatedPlayers[id]?.status === 'ACTIVE'
   ).length;
 
+  const firstExiter = state.firstRoundExiterId ?? playerId;
+  const soloStarted = remainingActive === 1;
+
   if (remainingActive === 0) {
-    // Round ends because all players folded
+    // Round ends because all players folded — starter next round is the FIRST exiter.
     return settleRound(
       {
         ...state,
         players: updatedPlayers,
+        firstRoundExiterId: firstExiter,
       },
       null, // No one discarded all cards
-      playerId // finisher is the last person who folded
+      playerId // last folder, only fallback
     );
   }
 
@@ -349,6 +371,10 @@ export function foldPlayer(state: GameState, playerId: string): GameState {
   return {
     ...state,
     players: updatedPlayers,
+    firstRoundExiterId: firstExiter,
+    soloDiscardedValues: soloStarted
+      ? (state.soloDiscardedValues ?? [])
+      : state.soloDiscardedValues,
     turnIndex: nextTurnIndex,
   };
 }
@@ -361,7 +387,11 @@ export function settleRound(
   const roundSummary: RoundPlayerScore[] = [];
   const updatedPlayers: Record<string, Player> = {};
 
-  const endingPlayerId = finisherPlayerId ?? lastFolderId ?? state.playerOrder[state.turnIndex];
+  const endingPlayerId =
+    state.firstRoundExiterId ??
+    finisherPlayerId ??
+    lastFolderId ??
+    state.playerOrder[state.turnIndex];
 
   for (const pid of state.playerOrder) {
     const p = state.players[pid];
@@ -414,10 +444,83 @@ export function settleRound(
         : 'ROUND_SUMMARY',
     players: updatedPlayers,
     lastRoundFinisherId: endingPlayerId,
+    soloDiscardedValues: null,
     pendingChipDiscardPlayerId,
     lastRoundSummary: roundSummary,
     winners:
       someoneReached40 && !pendingChipDiscardPlayerId ? determineWinners(updatedPlayers) : null,
+  };
+}
+
+export function exchangeWhiteForBlack(state: GameState, playerId: string): GameState {
+  const player = state.players[playerId];
+  if (!player) {
+    throw new Error('Spieler nicht gefunden.');
+  }
+  if (player.chips.white < 10) {
+    throw new Error('Mindestens 10 weiße Chips für den Tausch erforderlich.');
+  }
+  const updatedPlayer: Player = {
+    ...player,
+    chips: { white: player.chips.white - 10, black: player.chips.black + 1 },
+    totalScore: player.chips.white - 10 + (player.chips.black + 1) * 10,
+  };
+  return {
+    ...state,
+    players: { ...state.players, [playerId]: updatedPlayer },
+  };
+}
+
+export function resetGameForNewMatch(state: GameState): GameState {
+  const updatedPlayers: Record<string, Player> = {};
+  for (const pid of state.playerOrder) {
+    const p = state.players[pid];
+    if (!p) continue;
+    updatedPlayers[pid] = {
+      ...p,
+      chips: { white: 0, black: 0 },
+      totalScore: 0,
+      hand: [],
+      foldedHand: [],
+      status: 'ACTIVE',
+    };
+  }
+  return {
+    ...state,
+    phase: 'LOBBY',
+    roundNumber: 0,
+    players: updatedPlayers,
+    turnIndex: 0,
+    drawPile: [],
+    discardPile: [],
+    lastRoundFinisherId: null,
+    firstRoundExiterId: null,
+    soloDiscardedValues: null,
+    pendingChipDiscardPlayerId: null,
+    lastRoundSummary: null,
+    winners: null,
+  };
+}
+
+export function removePlayerFromLobby(state: GameState, playerId: string): GameState {
+  if (state.phase !== 'LOBBY') {
+    throw new Error('Spieler kann nur in der Lobby entfernt werden.');
+  }
+  if (!state.players[playerId]) {
+    return state;
+  }
+  const { [playerId]: _removed, ...rest } = state.players;
+  const order = state.playerOrder.filter((id) => id !== playerId);
+  let hostId = state.hostId;
+  if (hostId === playerId) {
+    hostId = order[0] ?? '';
+  }
+  return {
+    ...state,
+    players: rest,
+    playerOrder: order,
+    hostId,
+    turnIndex: 0,
   };
 }
 
@@ -514,16 +617,16 @@ export function filterStateForClient(state: GameState, viewerSessionId: string):
     state.discardPile.length > 0 ? state.discardPile[state.discardPile.length - 1] : null;
 
   const validPlays: CardValue[] = [];
+  const solo = isSoloEndspurt(state);
   if (isMyTurn && topDiscardCard !== null && viewer.status === 'ACTIVE') {
     const uniqueCardsInHand = Array.from(new Set(viewer.hand));
     for (const card of uniqueCardsInHand) {
-      if (canPlayCard(topDiscardCard, card)) {
-        validPlays.push(card);
-      }
+      if (!canPlayCard(topDiscardCard, card)) continue;
+      if (solo && state.soloDiscardedValues?.includes(card)) continue;
+      validPlays.push(card);
     }
   }
 
-  const solo = isSoloEndspurt(state);
   const canDraw = isMyTurn && viewer.status === 'ACTIVE' && state.drawPile.length > 0 && !solo;
   const canFold = isMyTurn && viewer.status === 'ACTIVE';
 
@@ -531,7 +634,7 @@ export function filterStateForClient(state: GameState, viewerSessionId: string):
     .filter((id) => id !== viewerSessionId)
     .map((id) => {
       const opp = state.players[id];
-      const cardCount = opp.status === 'ACTIVE' ? opp.hand.length : opp.foldedHand.length;
+      const cardCount = opp.hand.length > 0 ? opp.hand.length : opp.foldedHand.length;
       return {
         id: opp.id,
         name: opp.name,
@@ -580,6 +683,7 @@ export function filterStateForClient(state: GameState, viewerSessionId: string):
     discardPileCount: state.discardPile.length,
     drawPileCount: state.drawPile.length,
     isSoloEndspurt: solo,
+    soloDiscardedValues: state.soloDiscardedValues,
     pendingChipDiscardPlayerId: state.pendingChipDiscardPlayerId,
     lastRoundSummary: state.lastRoundSummary,
     winners: winnersFormatted,

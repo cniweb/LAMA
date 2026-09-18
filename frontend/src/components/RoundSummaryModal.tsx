@@ -10,12 +10,16 @@ interface RoundSummaryModalProps {
   state: ClientRoomView;
   onDiscardChip: (chipType: 'white' | 'black') => void;
   onNextRound: () => void;
+  onNewGame: () => void;
+  onLeaveRoom: () => void;
 }
 
 export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
   state,
   onDiscardChip,
   onNextRound,
+  onNewGame,
+  onLeaveRoom,
 }) => {
   const isGameOver = state.phase === 'GAME_OVER';
   const isPendingMyChipDiscard = state.pendingChipDiscardPlayerId === state.myPlayer.id;
@@ -191,6 +195,28 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
             <span>Nächsten Durchgang starten</span>
             <ArrowRight className="w-5 h-5" />
           </button>
+        )}
+
+        {/* Neues Spiel / Raum verlassen: nach Rundenende für alle sichtbar */}
+        {(isGameOver || (!isGameOver && !state.pendingChipDiscardPlayerId)) && (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onNewGame}
+              data-testid="new-game-button"
+              className="px-5 py-3 min-h-[44px] rounded-2xl bg-slate-100 hover:bg-white text-slate-950 font-black text-sm shadow-xl hover:scale-105 transition-all cursor-pointer"
+            >
+              Neues Spiel
+            </button>
+            <button
+              type="button"
+              onClick={onLeaveRoom}
+              data-testid="leave-room-button"
+              className="px-5 py-3 min-h-[44px] rounded-2xl bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 font-black text-sm shadow transition-all cursor-pointer"
+            >
+              Raum verlassen
+            </button>
+          </div>
         )}
       </div>
     </div>
