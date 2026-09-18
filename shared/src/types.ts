@@ -1,8 +1,15 @@
-export type CardValue = 1 | 2 | 3 | 4 | 5 | 6 | 'L';
+export type GameVariant = 'classic' | 'party';
+
+export type BaseCardValue = 1 | 2 | 3 | 4 | 5 | 6 | 'L';
+export type PlusCardValue = '1+' | '2+' | '3+' | '4+' | '5+' | '6+';
+export type CardValue = BaseCardValue | PlusCardValue | 'PL';
+
+export type ChipType = 'white' | 'black' | 'pink';
 
 export interface ChipCount {
   white: number; // 1 point each
   black: number; // 10 points each
+  pink: number; // 20 points each (Party Edition)
 }
 
 export type PlayerStatus = 'ACTIVE' | 'FOLDED' | 'DISCONNECTED';
@@ -27,12 +34,13 @@ export interface RoundPlayerScore {
   uniquePoints: number;
   chipsAdded: ChipCount;
   totalScoreAfterRound: number;
-  bonusChipReturned?: 'white' | 'black';
+  bonusChipReturned?: ChipType;
 }
 
 export interface GameState {
   roomCode: string;
   hostId: string;
+  variant: GameVariant;
   phase: GamePhase;
   roundNumber: number;
   players: Record<string, Player>;
@@ -62,6 +70,7 @@ export interface ClientOpponentView {
 export interface ClientRoomView {
   roomCode: string;
   hostId: string;
+  variant: GameVariant;
   isHost: boolean;
   phase: GamePhase;
   roundNumber: number;
@@ -94,9 +103,9 @@ export type ClientMessage =
   | { type: 'PLAY_CARD'; card: CardValue }
   | { type: 'DRAW_CARD' }
   | { type: 'FOLD' }
-  | { type: 'DISCARD_CHIP'; chipType: 'white' | 'black' }
+  | { type: 'DISCARD_CHIP'; chipType: ChipType }
   | { type: 'NEXT_ROUND' }
-  | { type: 'EXCHANGE_CHIPS' }
+  | { type: 'EXCHANGE_CHIPS'; from?: 'white' | 'black' }
   | { type: 'NEW_GAME' }
   | { type: 'LEAVE_ROOM' };
 

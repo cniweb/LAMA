@@ -1,3 +1,4 @@
+import type { GameVariant } from '@lama/shared';
 import { GameRoom } from './game-room.js';
 
 export { GameRoom };
@@ -17,14 +18,28 @@ function generateRoomCode(): string {
   return code;
 }
 
+function parseVariant(value: unknown): GameVariant {
+  return value === 'party' ? 'party' : 'classic';
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    // API: Room creation
+    // API: Room creation (Variante fix bei Erstellung: 'classic' | 'party')
     if (url.pathname === '/api/room/create' && request.method === 'POST') {
+      let variant: GameVariant = 'classic';
+      try {
+        const body = (await request.json()) as { variant?: unknown };
+        variant = parseVariant(body.variant);
+      } catch {
+        // Kein/ungültiger Body -> Default classic (altes Frontend bleibt kompatibel).
+      }
+      // Query-Override für einfache E2E-Nutzung (?variant=party)
+      const queryVariant = url.searchParams.get('variant');
+      if (queryVariant) variant = parseVariant(queryVariant);
       const roomCode = generateRoomCode();
-      return Response.json({ roomCode }, { status: 201 });
+      return Response.json({ roomCode, variant }, { status: 201 });
     }
 
     // API: Health check

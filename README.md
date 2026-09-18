@@ -15,20 +15,26 @@ Versuche, deine Handkarten so schnell wie möglich loszuwerden. Denn jede Karte,
 
 ## 🎴 Spiel-Utensilien
 
-* **56 Spielkarten:**
+* **56 Spielkarten (Klassik):**
   * Je 8x die Zahlenkarten **1 bis 6**
   * 8x **Lama-Karten** (Kultkarte mit 10 Minuspunkten!)
-* **70 Punkte-Chips:**
+* **70 Punkte-Chips (Klassik):**
   * ⚪ **50 weiße Chips:** je **1 Minuspunkt**
   * ⚫ **20 schwarze Chips:** je **10 Minuspunkte**
   * *(10 weiße Chips können jederzeit gegen einen schwarzen Chip getauscht werden)*
+
+> **🎉 Party Edition (wählbar beim Erstellen des Raumes):**
+> * **56 Karten:** je 7x die Werte **1–6**, 6 **Pluskarten** (`1+` bis `6+`, je 1x), 7x **Lama**, 1x **pinkes Lama** (Joker – passt überall!).
+> * **Pluskarte** = Extra-Zug: Nach dem Ablegen bist du sofort nochmal an der Reihe.
+> * Auf das **pinke Lama** darf nur ein Lama oder eine 1 gelegt werden. In der Wertung zählen Lamas mit pinkem Lama **20** statt 10.
+> * Zusätzlich **pinke 20er-Chips** (Tausch: 2× schwarz → pink). Bonus bei leerer Hand: 1er, 10er oder 20er abgeben.
 
 ---
 
 ## 🚀 Spielvorbereitung & Start
 
 1. **Raum erstellen oder beitreten:**
-   * Gib deinen Spielernamen ein und klicke auf **„Neues Spiel erstellen“**.
+   * Gib deinen Spielernamen ein, wähle die **Spielvariante (Klassik oder 🎉 Party Edition)** und klicke auf **„Neues Spiel erstellen“**.
    * Teile den 4-stelligen Raum-Code oder den direkten Einladungslink mit 1 bis 5 Freunden (insgesamt 2 bis 6 Spieler).
 2. **Karten austeilen:**
    * Alle Spieler erhalten zu Beginn jedes Durchgangs verdeckt **6 Handkarten**.

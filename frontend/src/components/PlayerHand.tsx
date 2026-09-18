@@ -15,10 +15,11 @@ interface PlayerHandProps {
   canFold: boolean;
   isSoloEndspurt: boolean;
   soloDiscardedValues?: CardValue[] | null;
+  isParty?: boolean;
   onPlayCard: (card: CardValue) => void;
   onDrawCard: () => void;
   onFold: () => void;
-  onExchangeChips?: () => void;
+  onExchangeChips?: (from: 'white' | 'black') => void;
 }
 
 export const PlayerHand: React.FC<PlayerHandProps> = ({
@@ -32,6 +33,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   canFold,
   isSoloEndspurt,
   soloDiscardedValues,
+  isParty = false,
   onPlayCard,
   onDrawCard,
   onFold,
@@ -49,12 +51,23 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           {onExchangeChips && chips.white >= 10 && (
             <button
               type="button"
-              onClick={onExchangeChips}
+              onClick={() => onExchangeChips('white')}
               data-testid="exchange-chips-button"
               className="px-2.5 py-1.5 min-h-[44px] rounded-lg bg-slate-800 hover:bg-slate-700 border border-amber-400/40 text-amber-300 font-bold text-xs shadow transition-all cursor-pointer hover:scale-105"
               title="10 weiße Chips gegen 1 schwarzen Chip tauschen"
             >
               10→1 tauschen
+            </button>
+          )}
+          {onExchangeChips && isParty && chips.black >= 2 && (
+            <button
+              type="button"
+              onClick={() => onExchangeChips('black')}
+              data-testid="exchange-black-to-pink-button"
+              className="px-2.5 py-1.5 min-h-[44px] rounded-lg bg-pink-950/60 hover:bg-pink-900 border border-pink-400/40 text-pink-300 font-bold text-xs shadow transition-all cursor-pointer hover:scale-105"
+              title="2 schwarze Chips gegen 1 pinken 20er-Chip tauschen (Party Edition)"
+            >
+              2×10→20 tauschen
             </button>
           )}
         </div>

@@ -1,4 +1,10 @@
-import type { CardValue, ClientMessage, ClientRoomView, ServerMessage } from '@lama/shared';
+import type {
+  CardValue,
+  ChipType,
+  ClientMessage,
+  ClientRoomView,
+  ServerMessage,
+} from '@lama/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const SESSION_KEY = 'lama_session_id';
@@ -25,7 +31,11 @@ export function savePlayerName(name: string): void {
   localStorage.setItem(NAME_KEY, name.trim());
 }
 
-export function useGameSocket(roomCode: string | null, playerName: string) {
+export function useGameSocket(
+  roomCode: string | null,
+  playerName: string,
+  variant: 'classic' | 'party' = 'classic'
+) {
   const [state, setState] = useState<ClientRoomView | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +89,7 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
     const host = window.location.host;
     const url = `${protocol}//${host}/api/room/${roomCode}/ws?sessionId=${encodeURIComponent(
       sessionIdRef.current
-    )}&playerName=${encodeURIComponent(playerName)}&roomCode=${encodeURIComponent(roomCode)}`;
+    )}&playerName=${encodeURIComponent(playerName)}&roomCode=${encodeURIComponent(roomCode)}&variant=${variant}`;
 
     const ws = new WebSocket(url);
     socketRef.current = ws;
@@ -115,7 +125,7 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
     ws.onerror = () => {
       setError('Verbindung zum Server unterbrochen.');
     };
-  }, [roomCode, playerName, scheduleReconnect]);
+  }, [roomCode, playerName, variant, scheduleReconnect]);
 
   useEffect(() => {
     connectRef.current = connect;
@@ -165,11 +175,14 @@ export function useGameSocket(roomCode: string | null, playerName: string) {
   const drawCard = useCallback(() => sendMessage({ type: 'DRAW_CARD' }), [sendMessage]);
   const fold = useCallback(() => sendMessage({ type: 'FOLD' }), [sendMessage]);
   const discardChip = useCallback(
-    (chipType: 'white' | 'black') => sendMessage({ type: 'DISCARD_CHIP', chipType }),
+    (chipType: ChipType) => sendMessage({ type: 'DISCARD_CHIP', chipType }),
     [sendMessage]
   );
   const nextRound = useCallback(() => sendMessage({ type: 'NEXT_ROUND' }), [sendMessage]);
-  const exchangeChips = useCallback(() => sendMessage({ type: 'EXCHANGE_CHIPS' }), [sendMessage]);
+  const exchangeChips = useCallback(
+    (from: 'white' | 'black' = 'white') => sendMessage({ type: 'EXCHANGE_CHIPS', from }),
+    [sendMessage]
+  );
   const newGame = useCallback(() => sendMessage({ type: 'NEW_GAME' }), [sendMessage]);
   const leaveRoom = useCallback(() => {
     leftRoomRef.current = true;

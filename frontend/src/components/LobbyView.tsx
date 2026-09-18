@@ -45,6 +45,11 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ state, onStartGame }) => {
         <span className="text-3xl">🦙</span>
         <h1 className="text-2xl sm:text-3xl font-black text-amber-400">LAMA Spiellobby</h1>
       </div>
+      {state.variant === 'party' ? (
+        <p className="text-xs sm:text-sm font-bold text-pink-300 bg-pink-500/15 border border-pink-400/40 rounded-full px-3 py-1 mb-3">
+          🎉 Party Edition – Pluskarten, pinkes Lama & 20er-Chips!
+        </p>
+      ) : null}
       <p className="text-xs sm:text-sm text-slate-400 text-center mb-6">
         Lade deine Freunde ein. Sobald mindestens 2 Spieler im Raum sind, kann es losgehen!
       </p>

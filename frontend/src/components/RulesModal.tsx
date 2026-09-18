@@ -105,6 +105,31 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               wenigsten Punkte hat, gewinnt!
             </p>
           </section>
+
+          <section>
+            <h3 className="font-extrabold text-pink-300 text-sm sm:text-base mb-1">
+              🎉 Party Edition: Pluskarten, pinkes Lama & 20er-Chips
+            </h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                <strong>Pluskarte (z. B. 3+):</strong> wird wie ihr Zahlenwert gelegt. Danach bist
+                du <strong>sofort nochmal am Zug</strong> (ablegen, ziehen oder aussteigen).
+              </li>
+              <li>
+                <strong>Pinkes Lama:</strong> passt als Joker <strong>auf jede Karte</strong>.
+                Darauf darf nur ein <strong>Lama</strong> oder eine <strong>1</strong> gelegt
+                werden.
+              </li>
+              <li>
+                <strong>Wertung:</strong> Pluskarten zählen als ihr Basiswert (nur 1×). Lamas mit
+                pinkem Lama dabei zählen <strong>20</strong> statt 10.
+              </li>
+              <li>
+                <strong>Chips:</strong> zusätzlich pinke <strong>20er</strong>. Tausch: 10× weiß →
+                schwarz, 2× schwarz → pink. Bonus bei leerer Hand: 1er, 10er oder 20er abgeben.
+              </li>
+            </ul>
+          </section>
         </div>
 
         <button
