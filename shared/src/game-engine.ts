@@ -517,9 +517,10 @@ export function settleRound(
   const updatedPlayers: Record<string, Player> = {};
   const variant = state.variant ?? 'classic';
 
+  // Rundenstarter: Wer alle Karten loswurde, beginnt. Sonst der Erst-Aussteiger.
   const endingPlayerId =
-    state.firstRoundExiterId ??
     finisherPlayerId ??
+    state.firstRoundExiterId ??
     lastFolderId ??
     state.playerOrder[state.turnIndex];
 
@@ -694,6 +695,108 @@ export function removePlayerFromLobby(state: GameState, playerId: string): GameS
     hostId,
     turnIndex: 0,
   };
+}
+
+/**
+ * Harte Entfernung eines Spielers in jeder Phase (explizites Verlassen).
+ * Im Gegensatz zum Soft-Disconnect bei Verbindungsabbruch (Reconnect möglich)
+ * wird der Slot gelöscht, damit die übrigen Spieler weiterspielen können.
+ * - Zugfolge bleibt konsistent (war der Entfernte am Zug, rückt der Nächste nach).
+ * - Host-Rechte gehen an den nächsten Spieler über.
+ * - Ausstehende Chip-Rückgabe des Entfernten verfällt (Abrechnung steht).
+ * - Reicht die Besetzung nicht mehr für einen Durchgang (< 2), fällt der Raum
+ *   zurück in die Lobby (verdiente Chips bleiben erhalten).
+ * - Sind keine AKTIVEN Spieler mehr übrig, wird der Durchgang abgerechnet.
+ */
+export function removePlayerFromGame(state: GameState, playerId: string): GameState {
+  if (!state.players[playerId]) {
+    return state;
+  }
+  if (state.phase === 'LOBBY') {
+    return removePlayerFromLobby(state, playerId);
+  }
+
+  const { [playerId]: _removed, ...rest } = state.players;
+  const removedIndex = state.playerOrder.indexOf(playerId);
+  const order = state.playerOrder.filter((id) => id !== playerId);
+  let hostId = state.hostId;
+  if (hostId === playerId) {
+    hostId = order[0] ?? '';
+  }
+
+  // Zugindex nachführen: Entfernter vor dem Zug -> schiebt alles nach vorne;
+  // Entfernter am Zug -> Nachrücker am gleichen Index ist am Zug.
+  let turnIndex = state.turnIndex;
+  if (removedIndex !== -1 && removedIndex < turnIndex) {
+    turnIndex -= 1;
+  }
+  turnIndex = order.length > 0 ? turnIndex % order.length : 0;
+
+  const firstRoundExiterId =
+    state.firstRoundExiterId === playerId ? null : state.firstRoundExiterId;
+  const lastRoundFinisherId =
+    state.lastRoundFinisherId === playerId ? null : state.lastRoundFinisherId;
+  const winners = state.winners?.filter((wid) => wid !== playerId) ?? null;
+  const lastRoundSummary = state.lastRoundSummary?.filter((s) => s.playerId !== playerId) ?? null;
+
+  const withoutPlayer: GameState = {
+    ...state,
+    players: rest,
+    playerOrder: order,
+    hostId,
+    turnIndex,
+    firstRoundExiterId,
+    lastRoundFinisherId,
+    winners,
+    lastRoundSummary,
+    pendingChipDiscardPlayerId:
+      state.pendingChipDiscardPlayerId === playerId ? null : state.pendingChipDiscardPlayerId,
+  };
+
+  // Ausstehende Chip-Rückgabe des Entfernten verfällt -> Abrechnungsphase auflösen.
+  if (state.pendingChipDiscardPlayerId === playerId) {
+    const someoneReached40 = Object.values(rest).some((p) => p.totalScore >= 40);
+    return {
+      ...withoutPlayer,
+      phase: someoneReached40 ? 'GAME_OVER' : 'ROUND_SUMMARY',
+      winners: someoneReached40 ? determineWinners(rest) : null,
+    };
+  }
+
+  // Zu wenige Spieler für einen Durchgang -> zurück in die Lobby (Chips behalten).
+  if (order.length < 2) {
+    const lobbyPlayers: Record<string, Player> = {};
+    for (const pid of order) {
+      const p = rest[pid];
+      if (!p) continue;
+      lobbyPlayers[pid] = {
+        ...p,
+        hand: [],
+        foldedHand: [],
+        status: 'ACTIVE',
+      };
+    }
+    return {
+      ...withoutPlayer,
+      phase: 'LOBBY',
+      players: lobbyPlayers,
+      turnIndex: 0,
+      drawPile: [],
+      discardPile: [],
+      firstRoundExiterId: null,
+      soloDiscardedValues: null,
+      pendingChipDiscardPlayerId: null,
+      lastRoundSummary: null,
+      winners: null,
+    };
+  }
+
+  // Kein AKTIVER Spieler mehr übrig (Rest ausgestiegen/getrennt) -> abrechnen.
+  if (withoutPlayer.phase === 'IN_ROUND' && order.every((id) => rest[id]?.status !== 'ACTIVE')) {
+    return settleRound(withoutPlayer, null, playerId);
+  }
+
+  return withoutPlayer;
 }
 
 export function discardBonusChip(
