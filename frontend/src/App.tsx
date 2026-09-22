@@ -259,18 +259,18 @@ export function App() {
   return (
     <div className="min-h-dvh w-full flex flex-col justify-between felt-table">
       {/* Top Navigation Bar */}
-      <header className="w-full px-4 pt-[max(0.625rem,env(safe-area-inset-top))] pb-1.5 sm:pb-2.5 bg-slate-950/80 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between z-30">
-        <div className="flex items-center gap-3">
-          <span className="text-xl">🦙</span>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-amber-400 text-sm sm:text-base tracking-wider">
+      <header className="w-full px-3 sm:px-4 pt-[max(0.625rem,env(safe-area-inset-top))] pb-1.5 sm:pb-2.5 bg-slate-950/80 border-b border-slate-800/80 backdrop-blur-md flex items-center justify-between gap-2 z-30">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <span className="text-xl shrink-0">🦙</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              <span className="font-black text-amber-400 text-sm sm:text-base tracking-wider whitespace-nowrap">
                 Raum: {roomCode}
               </span>
               {state?.roundNumber ? (
                 <span
                   data-testid="round-badge"
-                  className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold"
+                  className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-bold shrink-0"
                 >
                   Durchgang {state.roundNumber}
                 </span>
@@ -278,7 +278,7 @@ export function App() {
               {state?.variant === 'party' ? (
                 <span
                   data-testid="variant-badge"
-                  className="text-xs px-2 py-0.5 rounded-full bg-pink-500/20 border border-pink-400/50 text-pink-300 font-bold"
+                  className="text-xs px-2 py-0.5 rounded-full bg-pink-500/20 border border-pink-400/50 text-pink-300 font-bold shrink-0"
                 >
                   🎉 Party
                 </span>
@@ -287,7 +287,7 @@ export function App() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
           <div
             title={isConnected ? 'Verbunden' : 'Verbindungsaufbau...'}
             className="flex items-center gap-1.5 text-xs font-semibold"
@@ -308,7 +308,7 @@ export function App() {
           <button
             type="button"
             onClick={() => setRulesOpen(true)}
-            className="p-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition cursor-pointer"
+            className="p-1 sm:p-1.5 min-w-9 min-h-9 sm:min-w-11 sm:min-h-11 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition cursor-pointer shrink-0"
             title="Spielregeln ansehen"
           >
             <HelpCircle className="w-4 h-4" />
@@ -321,7 +321,7 @@ export function App() {
           <button
             type="button"
             onClick={handleLeaveRoom}
-            className="p-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition cursor-pointer"
+            className="p-1 sm:p-1.5 min-w-9 min-h-9 sm:min-w-11 sm:min-h-11 flex items-center justify-center rounded-lg bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition cursor-pointer shrink-0"
             title="Raum verlassen"
           >
             <LogOut className="w-4 h-4" />

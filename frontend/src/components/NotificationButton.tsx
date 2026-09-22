@@ -48,12 +48,12 @@ export function NotificationButton({ roomCode }: { roomCode: string | null }) {
     : 'Bei eigenem Zug benachrichtigen';
 
   return (
-    <div className="relative flex items-center">
+    <div className="relative flex items-center shrink-0">
       <button
         type="button"
         onClick={handleToggle}
         disabled={isBusy}
-        className={`p-1.5 min-w-11 min-h-11 flex items-center justify-center rounded-lg border transition cursor-pointer disabled:opacity-50 ${
+        className={`p-1 sm:p-1.5 min-w-9 min-h-9 sm:min-w-11 sm:min-h-11 flex items-center justify-center rounded-lg border transition cursor-pointer disabled:opacity-50 shrink-0 ${
           isSubscribed
             ? 'bg-amber-400/20 border-amber-400 text-amber-300 hover:bg-amber-400/30'
             : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-slate-100'

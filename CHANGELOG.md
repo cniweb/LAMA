@@ -6,6 +6,15 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.2.1] – Responsive Header-Fix – 2026-09-22
+
+### Behoben
+- **Navigation oben:** Header passte nach den neuen Buttons (Install, Glocke) nicht mehr
+  auf schmale Viewports. Jetzt `px-3 sm:px-4`, `gap-1 sm:gap-3`, Buttons
+  `p-1 sm:p-1.5 min-w-9 sm:min-w-11` (36px statt 44px auf Mobil), linke Seite
+  `flex-1 min-w-0` mit `flex-wrap` für Badges, alle Buttons `shrink-0` –
+  kein horizontaler Overflow mehr auf 320–375px, ab `sm` wieder volle 44px-Touch-Targets.
+
 ## [2.2.0] – PWA Install & Push-Benachrichtigungen – 2026-09-22
 
 ### Hinzugefügt
