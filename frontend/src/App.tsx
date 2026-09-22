@@ -1,6 +1,7 @@
 import type { GameVariant } from '@lama/shared';
-import { HelpCircle, LogOut, Sparkles, Wifi, WifiOff } from 'lucide-react';
+import { HelpCircle, Info, LogOut, Sparkles, Wifi, WifiOff } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
+import frontendPkg from '../package.json';
 import { DiscardPile } from './components/DiscardPile.js';
 import { InstallButton } from './components/InstallButton.js';
 import { LobbyView } from './components/LobbyView.js';
@@ -246,6 +247,20 @@ export function App() {
             <HelpCircle className="w-4 h-4" />
             <span>Wie funktioniert das Spiel? (Regeln)</span>
           </button>
+
+          <div className="mt-5 flex items-center justify-center gap-1.5 text-[11px] leading-none text-slate-500">
+            <Info className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+            <span>v{frontendPkg.version}</span>
+            <span aria-hidden="true">·</span>
+            <a
+              href="https://github.com/cniweb/LAMA/blob/main/CHANGELOG.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-slate-600 underline-offset-2 hover:text-slate-300 hover:decoration-slate-400 transition"
+            >
+              Changelog
+            </a>
+          </div>
         </div>
 
         <Suspense fallback={null}>

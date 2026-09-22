@@ -6,6 +6,15 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.2.2] – Versionshinweis auf Startseite – 2026-09-22
+
+### Hinzugefügt
+- **Startseite unten:** Nach den Regeln ein kleiner Hinweis `(i) vX.Y.Z` mit
+  Versionsnummer live aus `frontend/package.json` (`resolveJsonModule` in
+  `tsconfig.base.json`, `import pkg from '../package.json'`) plus Link
+  `Changelog` → `https://github.com/cniweb/LAMA/blob/main/CHANGELOG.md`
+  (`target="_blank" rel="noopener noreferrer"`, `Info`-Icon, `text-[11px]`).
+
 ## [2.2.1] – Responsive Header-Fix – 2026-09-22
 
 ### Behoben
