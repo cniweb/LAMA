@@ -33,7 +33,7 @@ export function InstallButton({ variant = 'icon' }: { variant?: 'icon' | 'full' 
         className={
           variant === 'full'
             ? 'w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer'
-            : 'p-1 sm:p-1.5 min-w-9 min-h-9 sm:min-w-11 sm:min-h-11 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition cursor-pointer shrink-0'
+            : 'p-1 sm:p-1.5 min-w-8 min-h-8 sm:min-w-11 sm:min-h-11 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition cursor-pointer shrink-0'
         }
         title="App installieren"
         aria-label="App installieren"

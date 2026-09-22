@@ -6,6 +6,25 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.2.3] – Version im Raum & Responsive-Refine – 2026-09-22
+
+### Hinzugefügt
+- **Raum-Header (i):** Zwischen Online-Icon und (?) ein neuer `(i)`-Button
+  (`Info`, `data-testid="version-info-button"`, `p-1 sm:p-1.5 min-w-8 sm:min-w-11`)
+  öffnet `VersionInfoModal` (lazy, wie `RulesModal`, `useModalDialog`, `Info` +
+  `vX.Y.Z` aus `frontend/package.json` + Link mit `ExternalLink` →
+  `https://github.com/cniweb/LAMA/blob/main/CHANGELOG.md` im neuen Fenster).
+
+### Behoben
+- **Header-Responsive mit 5 Buttons:** Trotz neuem `(i)`-Button kein Overflow auf
+  320px. Alle Icon-Buttons jetzt einheitlich `min-w-8/min-h-8 sm:min-w-11/min-h-11`
+  (32px mobil spart ~40px), Header `px-3 sm:px-4` + `gap-1 sm:gap-3` + `flex-1 min-w-0`
+  + `flex-wrap` für Badges. Leitplanke: >5 Icons → `...`-Menü statt weiter schrumpfen.
+
+### Geändert
+- **AGENTS.md:** Lessons Learned 6.16–6.18 dokumentiert (Responsive Header,
+  PWA Install & Push mit VAPID ohne Offline-Cache, Version Single Source of Truth).
+
 ## [2.2.2] – Versionshinweis auf Startseite – 2026-09-22
 
 ### Hinzugefügt

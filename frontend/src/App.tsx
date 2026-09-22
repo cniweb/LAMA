@@ -15,6 +15,7 @@ import { useTurnNotifications } from './hooks/useTurnNotifications.js';
 // canvas-confetti in einen separaten Chunk statt in den Initial-Load).
 const RulesModal = lazy(() => import('./components/RulesModal.js'));
 const RoundSummaryModal = lazy(() => import('./components/RoundSummaryModal.js'));
+const VersionInfoModal = lazy(() => import('./components/VersionInfoModal.js'));
 
 export function App() {
   const [roomCode, setRoomCode] = useState<string | null>(() => {
@@ -27,6 +28,7 @@ export function App() {
     roomCode !== null && getSavedPlayerName().trim() !== ''
   );
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [versionOpen, setVersionOpen] = useState(false);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [variant, setVariant] = useState<GameVariant>('classic');
 
@@ -322,8 +324,19 @@ export function App() {
 
           <button
             type="button"
+            onClick={() => setVersionOpen(true)}
+            className="p-1 sm:p-1.5 min-w-8 min-h-8 sm:min-w-11 sm:min-h-11 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition cursor-pointer shrink-0"
+            title="Version & Changelog"
+            aria-label="Version anzeigen"
+            data-testid="version-info-button"
+          >
+            <Info className="w-4 h-4" />
+          </button>
+
+          <button
+            type="button"
             onClick={() => setRulesOpen(true)}
-            className="p-1 sm:p-1.5 min-w-9 min-h-9 sm:min-w-11 sm:min-h-11 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition cursor-pointer shrink-0"
+            className="p-1 sm:p-1.5 min-w-8 min-h-8 sm:min-w-11 sm:min-h-11 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition cursor-pointer shrink-0"
             title="Spielregeln ansehen"
           >
             <HelpCircle className="w-4 h-4" />
@@ -336,7 +349,7 @@ export function App() {
           <button
             type="button"
             onClick={handleLeaveRoom}
-            className="p-1 sm:p-1.5 min-w-9 min-h-9 sm:min-w-11 sm:min-h-11 flex items-center justify-center rounded-lg bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition cursor-pointer shrink-0"
+            className="p-1 sm:p-1.5 min-w-8 min-h-8 sm:min-w-11 sm:min-h-11 flex items-center justify-center rounded-lg bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition cursor-pointer shrink-0"
             title="Raum verlassen"
           >
             <LogOut className="w-4 h-4" />
@@ -431,6 +444,11 @@ export function App() {
       {/* Rules Modal */}
       <Suspense fallback={null}>
         <RulesModal isOpen={rulesOpen} onClose={() => setRulesOpen(false)} />
+      </Suspense>
+
+      {/* Version Info Modal */}
+      <Suspense fallback={null}>
+        <VersionInfoModal isOpen={versionOpen} onClose={() => setVersionOpen(false)} />
       </Suspense>
     </div>
   );
