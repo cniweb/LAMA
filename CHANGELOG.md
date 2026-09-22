@@ -6,6 +6,24 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.3.0] – Punkte-Reset & Push-Fix – 2026-09-22
+
+### Behoben
+- **Punkte-Reset beim Verlassen / neuer Spieler:** Verlässt jemand den Raum,
+  werden bei allen Verbleibenden Punkte/Chips auf 0 und Durchgänge auf 1
+  zurückgesetzt (`resetGameForNewMatch` nach `removePlayerFromGame` im
+  `LEAVE_ROOM`-Handler sowie nach `addPlayerToRoom` im WS-Upgrade/`JOIN_ROOM`
+  wenn bereits Scores/Runden existieren). Betritt ein neuer Spieler die Lobby
+  mit bestehendem Fortschritt, ebenfalls Reset – faire Basis für alle.
+- **Push-Benachrichtigungen auch bei verlassenem Tab / geschlossenem Browser / App-Wechsel:**
+  `maybeNotifyNextPlayer` sendet jetzt immer (auch wenn WS noch offen ist,
+  SW unterdrückt Duplikat wenn Fenster sichtbar). `pending_push`-Tabelle +
+  `GET /api/room/:code/push/pending?endpoint=...` + `caches('lama-room')`
+  für `roomCode` (via `postMessage LAMA_SET_ROOM` aus `usePushSubscription`);
+  SW `push`-Handler holt erst Cache, dann Pending und zeigt `LAMA – Du bist
+  am Zug!` mit `url=/?room=CODE` – Klick fokussiert/öffnet Raum und ermöglicht
+  direkt das Fortsetzen des Zuges. `notificationclick` + `tag` + `vibrate`.
+
 ## [2.2.3] – Version im Raum & Responsive-Refine – 2026-09-22
 
 ### Hinzugefügt

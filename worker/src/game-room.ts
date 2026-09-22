@@ -71,6 +71,13 @@ export class GameRoom extends DurableObject<Env> {
         updated_at INTEGER NOT NULL
       )
     `);
+    this.ctx.storage.sql.exec(`
+      CREATE TABLE IF NOT EXISTS pending_push (
+        endpoint TEXT PRIMARY KEY,
+        payload TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    `);
   }
 
   private upsertPushSubscription(
@@ -112,6 +119,27 @@ export class GameRoom extends DurableObject<Env> {
     return rows[0] || null;
   }
 
+  private storePendingPush(endpoint: string, payload: Record<string, unknown>): void {
+    this.ctx.storage.sql.exec(
+      `INSERT OR REPLACE INTO pending_push (endpoint, payload, created_at) VALUES (?, ?, ?)`,
+      endpoint,
+      JSON.stringify(payload),
+      Date.now()
+    );
+  }
+
+  private consumePendingPush(endpoint: string): Record<string, unknown> | null {
+    const cur = this.ctx.storage.sql.exec(
+      `SELECT payload FROM pending_push WHERE endpoint = ?`,
+      endpoint
+    );
+    const rows = [...cur] as unknown as { payload: string }[];
+    if (rows.length === 0) return null;
+    const payload = JSON.parse(rows[0].payload as string) as Record<string, unknown>;
+    this.ctx.storage.sql.exec(`DELETE FROM pending_push WHERE endpoint = ?`, endpoint);
+    return payload;
+  }
+
   private maybeNotifyNextPlayer(
     prevState: GameState,
     nextState: GameState,
@@ -128,25 +156,26 @@ export class GameRoom extends DurableObject<Env> {
       prevState.phase === 'IN_ROUND' ? prevState.playerOrder[prevState.turnIndex] : null;
     if (nextPlayerId === prevTurnId) return;
 
-    const sockets = this.ctx.getWebSockets(nextPlayerId);
-    if (sockets.length > 0) return;
-
     const sub = this.getPushSubscription(nextPlayerId);
     if (!sub) return;
 
     const roomCode = nextState.roomCode;
     const roundNumber = nextState.roundNumber;
+    const payload = {
+      title: 'LAMA \u2013 Du bist am Zug!',
+      body: `Raum ${roomCode} \u00b7 Durchgang ${roundNumber} \u2013 du bist dran!`,
+      roomCode,
+      url: `/?room=${roomCode}`,
+    };
+    // Für SW-Fallback ohne verschlüsselte Payload: pending aufbewahren
+    // SW holt es via GET /api/push/pending?endpoint=...
+    this.storePendingPush(sub.endpoint, payload);
     this.ctx.waitUntil(
       (async () => {
-        const payload = {
-          title: 'LAMA \u2013 Du bist am Zug!',
-          body: `Raum ${roomCode} \u00b7 Durchgang ${roundNumber} \u2013 du bist dran!`,
-          roomCode,
-          url: `/?room=${roomCode}`,
-        };
         const result = await sendPush(this.env, { endpoint: sub.endpoint }, payload);
         if (result.shouldDelete) {
           this.deletePushSubscription(nextPlayerId, sub.endpoint);
+          this.ctx.storage.sql.exec(`DELETE FROM pending_push WHERE endpoint = ?`, sub.endpoint);
         }
       })()
     );
@@ -212,6 +241,7 @@ export class GameRoom extends DurableObject<Env> {
     this.ctx.storage.sql.exec("DELETE FROM game_store WHERE id = 'state'");
     this.ctx.storage.sql.exec('DELETE FROM rate_limits');
     this.ctx.storage.sql.exec('DELETE FROM push_subscriptions');
+    this.ctx.storage.sql.exec('DELETE FROM pending_push');
     this.stateCache = null;
     for (const ws of this.ctx.getWebSockets()) {
       try {
@@ -285,6 +315,14 @@ export class GameRoom extends DurableObject<Env> {
       }
     }
 
+    if (url.pathname === '/push/pending' && request.method === 'GET') {
+      const endpoint = url.searchParams.get('endpoint');
+      if (!endpoint) return Response.json({ error: 'endpoint required' }, { status: 400 });
+      const data = this.consumePendingPush(endpoint);
+      if (!data) return Response.json({}, { status: 200 });
+      return Response.json(data);
+    }
+
     // WebSocket upgrade handling
     if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
       const roomCode = url.searchParams.get('roomCode') || 'LAMA';
@@ -309,7 +347,20 @@ export class GameRoom extends DurableObject<Env> {
 
       // Add/Re-add player to room state
       try {
-        const updatedState = addPlayerToRoom(state, sessionId, playerName);
+        const isRejoin = !!state.players[sessionId];
+        let updatedState = addPlayerToRoom(state, sessionId, playerName);
+        // Wenn ein neuer Spieler dazukommt und bereits Punkte/Runden existieren,
+        // alles resetten (Punkte + Durchgänge von vorne) – faire Basis für alle.
+        if (!isRejoin && updatedState.playerOrder.length > 1) {
+          const hasProgress =
+            updatedState.roundNumber > 0 ||
+            Object.values(updatedState.players).some(
+              (p) => p.totalScore > 0 || p.chips.white > 0 || p.chips.black > 0 || p.chips.pink > 0
+            );
+          if (hasProgress) {
+            updatedState = resetGameForNewMatch(updatedState);
+          }
+        }
         await this.saveState(updatedState);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Fehler beim Beitritt';
@@ -363,7 +414,18 @@ export class GameRoom extends DurableObject<Env> {
 
       switch (clientMsg.type) {
         case 'JOIN_ROOM': {
-          nextState = addPlayerToRoom(state, clientMsg.sessionId, clientMsg.playerName);
+          const isRejoin = !!state.players[clientMsg.sessionId];
+          let afterAdd = addPlayerToRoom(state, clientMsg.sessionId, clientMsg.playerName);
+          if (!isRejoin && afterAdd.playerOrder.length > 1) {
+            const hasProgress =
+              afterAdd.roundNumber > 0 ||
+              Object.values(afterAdd.players).some(
+                (p) =>
+                  p.totalScore > 0 || p.chips.white > 0 || p.chips.black > 0 || p.chips.pink > 0
+              );
+            if (hasProgress) afterAdd = resetGameForNewMatch(afterAdd);
+          }
+          nextState = afterAdd;
           break;
         }
 
@@ -437,19 +499,30 @@ export class GameRoom extends DurableObject<Env> {
         }
 
         case 'LEAVE_ROOM': {
-          // Explizites Verlassen -> Slot hart entfernen, damit die übrigen
-          // Spieler weiterspielen können (Reconnect gibt es nur bei
-          // ungewolltem Verbindungsabbruch via webSocketClose).
           const leaverName = state.players[sessionId]?.name || 'Ein Spieler';
-          nextState = removePlayerFromGame(state, sessionId);
+          const beforeLen = state.playerOrder.length;
+          const afterRemoval = removePlayerFromGame(state, sessionId);
+          const leaverSub = this.getPushSubscription(sessionId);
+          if (leaverSub) {
+            this.ctx.storage.sql.exec(
+              'DELETE FROM pending_push WHERE endpoint = ?',
+              leaverSub.endpoint
+            );
+          }
           this.deletePushSubscription(sessionId);
-          if (nextState.playerOrder.length === 0) {
-            await this.saveState(nextState);
+          if (afterRemoval.playerOrder.length === 0) {
+            await this.saveState(afterRemoval);
             this.broadcastState();
             return;
           }
-          if (nextState.playerOrder.length !== state.playerOrder.length) {
-            this.broadcastNotification(`${leaverName} hat den Raum verlassen.`, 'info');
+          const left = afterRemoval.playerOrder.length !== beforeLen;
+          // Punkte und Durchgänge für alle Verbleibenden resetten (faire Basis)
+          nextState = resetGameForNewMatch(afterRemoval);
+          if (left) {
+            this.broadcastNotification(
+              `${leaverName} hat den Raum verlassen. Punkte wurden zurückgesetzt.`,
+              'info'
+            );
           }
           break;
         }

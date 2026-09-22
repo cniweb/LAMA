@@ -85,6 +85,21 @@ export default {
       return stub.fetch(new Request(fwd.toString(), request));
     }
 
+    const pendingMatch = url.pathname.match(/^\/api\/room\/([a-zA-Z0-9]+)\/push\/pending$/);
+    if (pendingMatch && request.method === 'GET') {
+      const roomCode = pendingMatch[1].toUpperCase();
+      const id = env.GAME_ROOM.idFromName(roomCode);
+      const stub = env.GAME_ROOM.get(id);
+      const fwd = new URL(request.url);
+      fwd.pathname = '/push/pending';
+      fwd.searchParams.set('roomCode', roomCode);
+      return stub.fetch(new Request(fwd.toString(), request));
+    }
+
+    if (url.pathname === '/api/push/pending' && request.method === 'GET') {
+      return Response.json({}, { status: 200 });
+    }
+
     // API: Health check
     if (url.pathname === '/api/health') {
       return Response.json({ status: 'ok', timestamp: Date.now() });

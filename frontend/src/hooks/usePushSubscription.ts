@@ -70,6 +70,16 @@ export function usePushSubscription(roomCode: string | null) {
     return () => window.removeEventListener('focus', onFocus);
   }, [isSupported]);
 
+  useEffect(() => {
+    if (!isSupported || !roomCode || !isSubscribed) return;
+    navigator.serviceWorker.ready
+      .then((reg) => {
+        const sw = reg.active || navigator.serviceWorker.controller;
+        sw?.postMessage({ type: 'LAMA_SET_ROOM', roomCode });
+      })
+      .catch(() => {});
+  }, [roomCode, isSubscribed, isSupported]);
+
   const subscribe = useCallback(async () => {
     if (!isSupported || !roomCode) return false;
     if (Notification.permission === 'denied') return false;
@@ -113,6 +123,11 @@ export function usePushSubscription(roomCode: string | null) {
       });
       if (!res.ok) throw new Error('Subscribe failed');
       setIsSubscribed(true);
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const sw = reg.active || navigator.serviceWorker.controller;
+        sw?.postMessage({ type: 'LAMA_SET_ROOM', roomCode });
+      } catch {}
       return true;
     } catch (e) {
       console.error('Push subscribe failed', e);
