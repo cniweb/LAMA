@@ -1,3 +1,4 @@
+import type { GameVariant } from '@lama/shared';
 import { HelpCircle, X } from 'lucide-react';
 import type React from 'react';
 import { useModalDialog } from '../hooks/useModalDialog.js';
@@ -5,10 +6,12 @@ import { useModalDialog } from '../hooks/useModalDialog.js';
 interface RulesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  variant?: GameVariant;
 }
 
-export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
+export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant = 'classic' }) => {
   const dialogRef = useModalDialog<HTMLDivElement>(isOpen, onClose);
+  const isParty = variant === 'party';
 
   if (!isOpen) return null;
 
@@ -31,12 +34,26 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-1">
           <HelpCircle className="w-6 h-6 text-amber-400" />
           <h2 id="rules-modal-title" className="text-xl sm:text-2xl font-black text-amber-400">
             LAMA Spielregeln
           </h2>
+          <span
+            className={`ml-1 text-xs px-2 py-0.5 rounded-full font-bold border ${
+              isParty
+                ? 'bg-pink-500/20 border-pink-400/50 text-pink-300'
+                : 'bg-slate-800 border-slate-600 text-slate-300'
+            }`}
+          >
+            {isParty ? '🎉 Party' : '🦙 Klassik'}
+          </span>
         </div>
+        <p className="text-[11px] font-bold tracking-wider uppercase text-slate-500 mb-4">
+          {isParty
+            ? 'Party Edition – Pluskarten, pinkes Lama & 20er-Chips'
+            : 'Klassik – 1–6 & Lama'}
+        </p>
 
         <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
           <section>
@@ -51,6 +68,35 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
 
           <section>
             <h3 className="font-extrabold text-slate-100 text-sm sm:text-base mb-1">
+              🎴 Spiel-Utensilien ({isParty ? 'Party' : 'Klassik'})
+            </h3>
+            {isParty ? (
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  <strong>56 Karten:</strong> je 7× 1–6, 6× Pluskarten (`1+`–`6+`), 7× Lama, 1×{' '}
+                  <strong className="text-pink-300">pinkes Lama</strong> (Joker).
+                </li>
+                <li>
+                  <strong>Chips:</strong> weiß 1, schwarz 10,{' '}
+                  <strong className="text-pink-300">pink 20</strong> (Tausch: 10 weiß → schwarz, 2
+                  schwarz → pink).
+                </li>
+              </ul>
+            ) : (
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  <strong>56 Karten:</strong> je 8× 1–6, 8× Lama.
+                </li>
+                <li>
+                  <strong>70 Chips:</strong> 50× weiß (1), 20× schwarz (10) – 10 weiß → schwarz
+                  tauschbar.
+                </li>
+              </ul>
+            )}
+          </section>
+
+          <section>
+            <h3 className="font-extrabold text-slate-100 text-sm sm:text-base mb-1">
               🃏 Deine 3 Zug-Optionen
             </h3>
             <ul className="list-disc pl-5 space-y-1">
@@ -61,6 +107,17 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
                 <em>Sonderfälle:</em> Auf eine <strong>6</strong> darf eine 6 oder ein{' '}
                 <strong>Lama</strong> gelegt werden. Auf ein <strong>Lama</strong> darf ein Lama
                 oder eine <strong>1</strong> gelegt werden.
+                {isParty && (
+                  <>
+                    {' '}
+                    <br />
+                    <em>Party:</em> <strong className="text-pink-300">Pinkes Lama (PL)</strong>{' '}
+                    passt als Joker <strong>auf jede Karte</strong>. Auf PL darf nur{' '}
+                    <strong>Lama</strong> oder <strong>1</strong> (auch `1+` zählt als 1) gelegt
+                    werden. <strong>Pluskarte</strong> (`3+`) wird wie ihre Zahl gelegt und gibt
+                    sofort einen <strong>Extra-Zug</strong>.
+                  </>
+                )}
               </li>
               <li>
                 <strong>Karte nachziehen:</strong> 1 Karte vom Nachziehstapel ziehen (Zug endet
@@ -81,6 +138,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               Sind alle anderen Mitspieler ausgestiegen, spielst du alleine weiter. Du darfst jedoch{' '}
               <strong>nicht mehr nachziehen</strong>, sondern nur noch ablegen, solange du kannst
               und willst!
+              {isParty && ' Im Party-Solo zählt jeder Kartenwert-plus nur einmal (PL als Lama).'}
             </p>
           </section>
 
@@ -92,6 +150,13 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               Jeder Kartenwert zählt nur <strong>einmal</strong> als Minuspunkte:
               <br />
               Drei 4er = 4 Minuspunkte. Lamas zählen 10 Minuspunkte.
+              {isParty && (
+                <>
+                  {' '}
+                  Pinkes Lama dabei = <strong className="text-pink-300">20</strong> für alle Lamas.
+                  Pluskarten zählen als ihr Basiswert (`3+` → 3).
+                </>
+              )}
             </p>
           </section>
 
@@ -100,36 +165,39 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               🌟 Chip-Bonus & Spielende
             </h3>
             <p>
-              Wer alle Karten abgelegt hat, darf einen beliebigen Chip (auch einen schwarzen 10er!)
-              abgeben. Erreicht jemand <strong>40 Minuspunkte</strong>, endet das Spiel und wer am
-              wenigsten Punkte hat, gewinnt!
+              Wer alle Karten abgelegt hat, darf einen beliebigen Chip
+              {isParty ? ' (auch pinken 20er!)' : ' (auch schwarzen 10er!)'} abgeben. Erreicht
+              jemand <strong>40 Minuspunkte</strong>, endet das Spiel und wer am wenigsten Punkte
+              hat, gewinnt!
             </p>
           </section>
 
-          <section>
-            <h3 className="font-extrabold text-pink-300 text-sm sm:text-base mb-1">
-              🎉 Party Edition: Pluskarten, pinkes Lama & 20er-Chips
-            </h3>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>
-                <strong>Pluskarte (z. B. 3+):</strong> wird wie ihr Zahlenwert gelegt. Danach bist
-                du <strong>sofort nochmal am Zug</strong> (ablegen, ziehen oder aussteigen).
-              </li>
-              <li>
-                <strong>Pinkes Lama:</strong> passt als Joker <strong>auf jede Karte</strong>.
-                Darauf darf nur ein <strong>Lama</strong> oder eine <strong>1</strong> gelegt
-                werden.
-              </li>
-              <li>
-                <strong>Wertung:</strong> Pluskarten zählen als ihr Basiswert (nur 1×). Lamas mit
-                pinkem Lama dabei zählen <strong>20</strong> statt 10.
-              </li>
-              <li>
-                <strong>Chips:</strong> zusätzlich pinke <strong>20er</strong>. Tausch: 10× weiß →
-                schwarz, 2× schwarz → pink. Bonus bei leerer Hand: 1er, 10er oder 20er abgeben.
-              </li>
-            </ul>
-          </section>
+          {isParty && (
+            <section>
+              <h3 className="font-extrabold text-pink-300 text-sm sm:text-base mb-1">
+                🎉 Party Edition: Pluskarten, pinkes Lama & 20er-Chips
+              </h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  <strong>Pluskarte (z. B. 3+):</strong> wird wie ihr Zahlenwert gelegt. Danach bist
+                  du <strong>sofort nochmal am Zug</strong> (ablegen, ziehen oder aussteigen).
+                </li>
+                <li>
+                  <strong>Pinkes Lama:</strong> passt als Joker <strong>auf jede Karte</strong>.
+                  Darauf darf nur ein <strong>Lama</strong> oder eine <strong>1</strong> gelegt
+                  werden.
+                </li>
+                <li>
+                  <strong>Wertung:</strong> Pluskarten zählen als ihr Basiswert (nur 1×). Lamas mit
+                  pinkem Lama dabei zählen <strong>20</strong> statt 10.
+                </li>
+                <li>
+                  <strong>Chips:</strong> zusätzlich pinke <strong>20er</strong>. Tausch: 10× weiß →
+                  schwarz, 2× schwarz → pink. Bonus bei leerer Hand: 1er, 10er oder 20er abgeben.
+                </li>
+              </ul>
+            </section>
+          )}
         </div>
 
         <button

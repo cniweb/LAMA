@@ -22,13 +22,14 @@ LAMA ist als Monorepo konzipiert, bestehend aus drei Kern-Komponenten, die eng �
 - **Framework**: React 19 + Vite
 - **Styling**: Tailwind CSS
 - **State/API**: WebSocket-basierte Echtzeitkommunikation (über `useGameSocket` Hook)
-- **PWA**: Manifest- und Service-Worker-Grundausstattung für mobile Installation.
+- **PWA**: `manifest.webmanifest` + `icon.svg` + minimaler Service Worker (`frontend/public/sw.js` mit `skipWaiting`/`clients.claim`, `push` + `notificationclick`, kein Offline-Cache) — Registrierung nur im `isSecureContext` (`frontend/src/main.tsx`). `InstallButton` (Icon im Header `p-1 sm:p-1.5 min-w-8 sm:min-w-11` + Full-Variante über Regeln auf der Startseite) nutzt `beforeinstallprompt` + iOS-Fallback, `NotificationButton` (Glocke) + Hooks `useTurnNotifications` (lokal `new Notification` bei `hidden||!hasFocus`) und `usePushSubscription` (VAPID `GET /api/push/vapidPublicKey`, `pushManager.subscribe`). `VersionInfoModal` + Startseiten-Footer lesen Version live aus `frontend/package.json` (`resolveJsonModule`), `RulesModal` zeigt variantenabhängig Klassik vs. Party (Badge, Utensilien, Joker/Extra-Zug, Wertung).
 
 ### Backend (Cloudflare Ecosystem)
-- **Runtime**: Cloudflare Workers (V8-Isolate)
+- **Runtime**: Cloudflare Workers (V8-Isolate, `compatibility_flags: ["nodejs_compat"]`)
 - **State Management**: **Durable Objects (DO)**. Jeder Spielraum ist ein eigenes DO-Instanz, das den Zustand konsistent hält.
-- **Persistence**: **SQLite-backed Storage** innerhalb der Durable Objects. Der Spielzustand wird atomar nach jeder Zustandsänderung persistiert.
+- **Persistence**: **SQLite-backed Storage** innerhalb der Durable Objects. Tabellen: `game_store`, `rate_limits` (Token-Bucket) und `push_subscriptions` + `pending_push` für Web Push. Der Spielzustand wird atomar nach jeder Zustandsänderung persistiert.
 - **Communication**: **WebSocket Hibernation API**. Erlaubt es dem DO, bei Inaktivität zu hibernieren (0 GB-s Compute) und bei eingehenden Frames automatisch aufzuwachen.
+- **Push-Benachrichtigungen**: VAPID (`VAPID_PUBLIC_KEY` 65B base64url, `VAPID_PRIVATE_KEY` 32B, `VAPID_SUBJECT` `mailto:` in `worker/wrangler.jsonc`/`secret`) → `GET /api/push/vapidPublicKey` + `POST /api/room/:code/push/subscribe|unsubscribe|pending` → `worker/src/push.ts` (VAPID-JWT `ECDSA P-256` via WebCrypto, `Authorization: vapid`, `pending_push` Fallback für unverschlüsselte `push`-Events, `maybeNotifyNextPlayer` via `ctx.waitUntil` + `404/410`-Cleanup). Punkte-Reset bei Verlassen/Neubeitritt via `resetGameForNewMatch` nach `removePlayerFromGame`/`addPlayerToRoom`.
 
 ### Tooling & Qualitätssicherung
 - **Sprache**: TypeScript (Strict Mode)

@@ -114,8 +114,12 @@ Gelingt es dir, alle deine Handkarten abzulegen und damit die Runde siegreich zu
 
 * **Gültige Karten** werden auf deiner Hand automatisch hervorgehoben.
 * **Klick auf eine Karte** legt sie auf den Ablagestapel.
+* **Regeln (?)** zeigen immer die **vollständigen Regeln der gewählten Variante** (Klassik: 56 Karten 8×1–6/8×Lama, 70 Chips; Party: Pluskarten, pinkes Lama, 20er-Chips).
+* **Version (i)** unten auf der Startseite und im Raum-Header zeigt die aktuelle `package.json`-Version + Link zum [Changelog](https://github.com/cniweb/LAMA/blob/main/CHANGELOG.md).
+* **Installation:** `Download`-Button (Header + über Regeln) installiert die PWA auf Startbildschirm/Desktop.
+* **Benachrichtigungen:** Glocke im Header abonniert Push-Benachrichtigungen — du wirst auch bei geschlossenem Browser benachrichtigt, wenn du am Zug bist (Klick öffnet Raum `/?room=CODE`).
 * Bei einem Verbindungsabbruch kannst du die Seite einfach neu laden – deine Sitzung wird automatisch wiederhergestellt.
-* Entwickelt mit **Cloudflare Workers (Durable Objects)**, **WebSockets** und **React**.
+* Entwickelt mit **Cloudflare Workers (Durable Objects, SQLite, VAPID Push)**, **WebSockets** und **React**.
 
 ---
 

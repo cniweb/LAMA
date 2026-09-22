@@ -266,7 +266,7 @@ export function App() {
         </div>
 
         <Suspense fallback={null}>
-          <RulesModal isOpen={rulesOpen} onClose={() => setRulesOpen(false)} />
+          <RulesModal isOpen={rulesOpen} onClose={() => setRulesOpen(false)} variant={variant} />
         </Suspense>
       </main>
     );
@@ -443,7 +443,11 @@ export function App() {
 
       {/* Rules Modal */}
       <Suspense fallback={null}>
-        <RulesModal isOpen={rulesOpen} onClose={() => setRulesOpen(false)} />
+        <RulesModal
+          isOpen={rulesOpen}
+          onClose={() => setRulesOpen(false)}
+          variant={state?.variant ?? variant}
+        />
       </Suspense>
 
       {/* Version Info Modal */}

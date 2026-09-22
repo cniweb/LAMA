@@ -6,6 +6,20 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.3.1] – Varianten-Regeln & Doku-Konsistenz – 2026-09-22
+
+### Geändert
+- **Regeln (?) variantenabhängig:** `RulesModal` zeigt jetzt immer die **vollständigen
+  Regeln der gewählten Variante** – Badge `Klassik`/`Party`, Utensilien (Klassik:
+  56× 8×1–6/8×Lama, 70 Chips; Party: 7×1–6/6×Plus/7×L/1×PL + pink 20er), Sonderfälle
+  PL als Joker/Extra-Zug (Plus), Abrechnung (Lama 10 vs. 20 mit PL, Plus= Basiswert)
+  und Bonus (Party auch pink). `App.tsx` reicht `variant` (Lobby-Auswahl) bzw.
+  `state.variant` (im Raum) an `RulesModal` weiter.
+- **Doku konsistent:** `docs/tech-stack.md` PWA/Push/VAPID (`push_subscriptions`,
+  `pending_push`, `maybeNotifyNextPlayer`, `VAPID_*`) + Frontend-Hooks/Modals
+  beschrieben; `README.md` Techn. Hinweise ergänzt (variantenabhängiger `?`-Dialog,
+  `(i)`-Version, Install/Push).
+
 ## [2.3.0] – Punkte-Reset & Push-Fix – 2026-09-22
 
 ### Behoben
