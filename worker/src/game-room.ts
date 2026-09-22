@@ -22,10 +22,20 @@ import {
   startRound,
 } from '@lama/shared';
 import type { Env } from './index.js';
+import { sendPush } from './push.js';
 
 interface WebSocketAttachment {
   sessionId: string;
   playerName: string;
+}
+
+interface PushSubRow {
+  session_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  room_code: string;
+  updated_at: number;
 }
 
 export class GameRoom extends DurableObject<Env> {
@@ -51,6 +61,95 @@ export class GameRoom extends DurableObject<Env> {
         updated_at INTEGER NOT NULL
       )
     `);
+    this.ctx.storage.sql.exec(`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        session_id TEXT PRIMARY KEY,
+        endpoint TEXT NOT NULL,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        room_code TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    `);
+  }
+
+  private upsertPushSubscription(
+    sessionId: string,
+    endpoint: string,
+    p256dh: string,
+    auth: string,
+    roomCode: string
+  ): void {
+    this.ctx.storage.sql.exec(
+      `INSERT OR REPLACE INTO push_subscriptions (session_id, endpoint, p256dh, auth, room_code, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+      sessionId,
+      endpoint,
+      p256dh,
+      auth,
+      roomCode.toUpperCase(),
+      Date.now()
+    );
+  }
+
+  private deletePushSubscription(sessionId: string, endpoint?: string): void {
+    if (endpoint) {
+      this.ctx.storage.sql.exec(
+        `DELETE FROM push_subscriptions WHERE session_id = ? AND endpoint = ?`,
+        sessionId,
+        endpoint
+      );
+    } else {
+      this.ctx.storage.sql.exec(`DELETE FROM push_subscriptions WHERE session_id = ?`, sessionId);
+    }
+  }
+
+  private getPushSubscription(sessionId: string): PushSubRow | null {
+    const cur = this.ctx.storage.sql.exec(
+      `SELECT session_id, endpoint, p256dh, auth, room_code, updated_at FROM push_subscriptions WHERE session_id = ?`,
+      sessionId
+    );
+    const rows = [...cur] as unknown as PushSubRow[];
+    return rows[0] || null;
+  }
+
+  private maybeNotifyNextPlayer(
+    prevState: GameState,
+    nextState: GameState,
+    actorSessionId: string
+  ): void {
+    if (nextState.phase !== 'IN_ROUND') return;
+    const nextPlayerId = nextState.playerOrder[nextState.turnIndex];
+    if (!nextPlayerId) return;
+    if (nextPlayerId === actorSessionId) {
+      const prevPlayerId = prevState.playerOrder[prevState.turnIndex];
+      if (nextPlayerId === prevPlayerId) return;
+    }
+    const prevTurnId =
+      prevState.phase === 'IN_ROUND' ? prevState.playerOrder[prevState.turnIndex] : null;
+    if (nextPlayerId === prevTurnId) return;
+
+    const sockets = this.ctx.getWebSockets(nextPlayerId);
+    if (sockets.length > 0) return;
+
+    const sub = this.getPushSubscription(nextPlayerId);
+    if (!sub) return;
+
+    const roomCode = nextState.roomCode;
+    const roundNumber = nextState.roundNumber;
+    this.ctx.waitUntil(
+      (async () => {
+        const payload = {
+          title: 'LAMA \u2013 Du bist am Zug!',
+          body: `Raum ${roomCode} \u00b7 Durchgang ${roundNumber} \u2013 du bist dran!`,
+          roomCode,
+          url: `/?room=${roomCode}`,
+        };
+        const result = await sendPush(this.env, { endpoint: sub.endpoint }, payload);
+        if (result.shouldDelete) {
+          this.deletePushSubscription(nextPlayerId, sub.endpoint);
+        }
+      })()
+    );
   }
 
   private async loadState(
@@ -112,6 +211,7 @@ export class GameRoom extends DurableObject<Env> {
     }
     this.ctx.storage.sql.exec("DELETE FROM game_store WHERE id = 'state'");
     this.ctx.storage.sql.exec('DELETE FROM rate_limits');
+    this.ctx.storage.sql.exec('DELETE FROM push_subscriptions');
     this.stateCache = null;
     for (const ws of this.ctx.getWebSockets()) {
       try {
@@ -146,6 +246,44 @@ export class GameRoom extends DurableObject<Env> {
 
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === '/push/subscribe' && request.method === 'POST') {
+      const roomCode = url.searchParams.get('roomCode') || 'LAMA';
+      const sessionId =
+        url.searchParams.get('sessionId') || request.headers.get('x-session-id') || '';
+      try {
+        const body = (await request.json()) as {
+          endpoint?: string;
+          keys?: { p256dh?: string; auth?: string };
+          roomCode?: string;
+        };
+        if (!body.endpoint || !body.keys?.p256dh || !body.keys?.auth) {
+          return Response.json({ error: 'Invalid subscription' }, { status: 400 });
+        }
+        const sid = sessionId || (body as unknown as { sessionId?: string }).sessionId || '';
+        if (!sid) return Response.json({ error: 'sessionId required' }, { status: 400 });
+        this.upsertPushSubscription(sid, body.endpoint, body.keys.p256dh, body.keys.auth, roomCode);
+        return Response.json({ ok: true });
+      } catch {
+        return Response.json({ error: 'Invalid JSON' }, { status: 400 });
+      }
+    }
+
+    if (url.pathname === '/push/unsubscribe' && request.method === 'POST') {
+      const sessionId =
+        url.searchParams.get('sessionId') || request.headers.get('x-session-id') || '';
+      try {
+        const body = (await request.json().catch(() => ({}))) as {
+          endpoint?: string;
+          sessionId?: string;
+        };
+        const sid = sessionId || body.sessionId || '';
+        if (sid) this.deletePushSubscription(sid, body.endpoint);
+        return Response.json({ ok: true });
+      } catch {
+        return Response.json({ ok: true });
+      }
+    }
 
     // WebSocket upgrade handling
     if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {
@@ -304,6 +442,7 @@ export class GameRoom extends DurableObject<Env> {
           // ungewolltem Verbindungsabbruch via webSocketClose).
           const leaverName = state.players[sessionId]?.name || 'Ein Spieler';
           nextState = removePlayerFromGame(state, sessionId);
+          this.deletePushSubscription(sessionId);
           if (nextState.playerOrder.length === 0) {
             await this.saveState(nextState);
             this.broadcastState();
@@ -315,11 +454,46 @@ export class GameRoom extends DurableObject<Env> {
           break;
         }
 
+        case 'REGISTER_PUSH': {
+          const sub = clientMsg.subscription;
+          if (!sub?.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) {
+            throw new Error('Ungültige Push-Subscription');
+          }
+          this.upsertPushSubscription(
+            sessionId,
+            sub.endpoint,
+            sub.keys.p256dh,
+            sub.keys.auth,
+            sub.roomCode
+          );
+          ws.send(
+            JSON.stringify({
+              type: 'NOTIFICATION',
+              text: 'Benachrichtigungen aktiviert',
+              tone: 'success',
+            } satisfies ServerMessage)
+          );
+          return;
+        }
+
+        case 'UNREGISTER_PUSH': {
+          this.deletePushSubscription(sessionId, clientMsg.endpoint);
+          ws.send(
+            JSON.stringify({
+              type: 'NOTIFICATION',
+              text: 'Benachrichtigungen deaktiviert',
+              tone: 'info',
+            } satisfies ServerMessage)
+          );
+          return;
+        }
+
         default:
           throw new Error('Unbekannte Aktion.');
       }
 
       await this.saveState(nextState);
+      this.maybeNotifyNextPlayer(state, nextState, sessionId);
       this.broadcastState();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Aktion fehlgeschlagen';

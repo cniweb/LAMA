@@ -6,6 +6,9 @@ export { GameRoom };
 export interface Env {
   GAME_ROOM: DurableObjectNamespace<GameRoom>;
   ASSETS: Fetcher;
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+  VAPID_SUBJECT?: string;
 }
 
 const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -40,6 +43,46 @@ export default {
       if (queryVariant) variant = parseVariant(queryVariant);
       const roomCode = generateRoomCode();
       return Response.json({ roomCode, variant }, { status: 201 });
+    }
+
+    // API: VAPID public key for PushManager
+    if (url.pathname === '/api/push/vapidPublicKey' && request.method === 'GET') {
+      const pub = (env as unknown as Record<string, string | undefined>).VAPID_PUBLIC_KEY;
+      if (!pub) return Response.json({ publicKey: null }, { status: 200 });
+      return Response.json({ publicKey: pub });
+    }
+
+    // API: Push subscription via REST (alternativ zum WebSocket)
+    const pushSubMatch = url.pathname.match(/^\/api\/room\/([a-zA-Z0-9]+)\/push\/subscribe$/);
+    if (pushSubMatch && request.method === 'POST') {
+      const roomCode = pushSubMatch[1].toUpperCase();
+      const id = env.GAME_ROOM.idFromName(roomCode);
+      const stub = env.GAME_ROOM.get(id);
+      const fwd = new URL(request.url);
+      fwd.pathname = '/push/subscribe';
+      fwd.searchParams.set('roomCode', roomCode);
+      const sessionId =
+        request.headers.get('x-session-id') ||
+        new URL(request.url).searchParams.get('sessionId') ||
+        '';
+      if (sessionId) fwd.searchParams.set('sessionId', sessionId);
+      return stub.fetch(new Request(fwd.toString(), request));
+    }
+
+    const pushUnsubMatch = url.pathname.match(/^\/api\/room\/([a-zA-Z0-9]+)\/push\/unsubscribe$/);
+    if (pushUnsubMatch && request.method === 'POST') {
+      const roomCode = pushUnsubMatch[1].toUpperCase();
+      const id = env.GAME_ROOM.idFromName(roomCode);
+      const stub = env.GAME_ROOM.get(id);
+      const fwd = new URL(request.url);
+      fwd.pathname = '/push/unsubscribe';
+      fwd.searchParams.set('roomCode', roomCode);
+      const sessionId =
+        request.headers.get('x-session-id') ||
+        new URL(request.url).searchParams.get('sessionId') ||
+        '';
+      if (sessionId) fwd.searchParams.set('sessionId', sessionId);
+      return stub.fetch(new Request(fwd.toString(), request));
     }
 
     // API: Health check

@@ -97,6 +97,12 @@ export interface ClientRoomView {
   winners: { id: string; name: string; score: number }[] | null;
 }
 
+export interface PushSubscriptionPayload {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+  roomCode: string;
+}
+
 export type ClientMessage =
   | { type: 'JOIN_ROOM'; roomCode: string; playerName: string; sessionId: string }
   | { type: 'START_GAME' }
@@ -107,7 +113,9 @@ export type ClientMessage =
   | { type: 'NEXT_ROUND' }
   | { type: 'EXCHANGE_CHIPS'; from?: 'white' | 'black' }
   | { type: 'NEW_GAME' }
-  | { type: 'LEAVE_ROOM' };
+  | { type: 'LEAVE_ROOM' }
+  | { type: 'REGISTER_PUSH'; subscription: PushSubscriptionPayload }
+  | { type: 'UNREGISTER_PUSH'; endpoint?: string };
 
 export type ServerMessage =
   | { type: 'STATE_UPDATE'; state: ClientRoomView }

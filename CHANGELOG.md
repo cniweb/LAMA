@@ -6,6 +6,31 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.2.0] – PWA Install & Push-Benachrichtigungen – 2026-09-22
+
+### Hinzugefügt
+- **PWA Install-Button:** Zwischen Hilfe (?) und Verlassen im Header (Icon-Variante)
+  sowie prominent auf der Startseite direkt über den Regeln (Full-Variante, `variant='full'`).
+  Nutzt `beforeinstallprompt` (mit iOS-Fallback »Teilen → Zum Home-Bildschirm«),
+  versteckt sich automatisch im `standalone`-Modus, minimaler Service Worker
+  (`/sw.js` mit `skipWaiting`/`clients.claim`, `push` + `notificationclick`).
+  SW wird nur im `isSecureContext` registriert (`frontend/src/main.tsx`).
+- **Browser-Benachrichtigung bei eigenem Zug:** Zweistufig – lokal via
+  `Notification` API wenn der Tab im Hintergrund ist (`useTurnNotifications`,
+  `document.hidden`/`hasFocus`, `tag: lama-turn-<room>`), und Push via Service
+  Worker wenn der Browser/App geschlossen ist. Neue Glocke im Header
+  (`NotificationButton`, `Bell`/`BellOff`) für Opt-in, Permission-Handling,
+  `pushManager.subscribe` mit VAPID-Key (`GET /api/push/vapidPublicKey`).
+  Worker speichert Subscriptions in `push_subscriptions` (SQLite im DO) und
+  versendet per VAPID-JWT (`ECDSA P-256` via WebCrypto) an den nächsten
+  Spieler, wenn dessen WS nicht verbunden ist (`maybeNotifyNextPlayer` via
+  `ctx.waitUntil`). REST-Endpunkte `POST /api/room/:code/push/subscribe|unsubscribe`
+  plus WebSocket-Messages `REGISTER_PUSH`/`UNREGISTER_PUSH`. VAPID-Keys in
+  `worker/wrangler.jsonc` (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`).
+- **Service Worker erweitert:** `push`-Event zeigt »LAMA – Du bist am Zug!« mit
+  Raum/Runde (`/?room=<code>` als `data.url`), `notificationclick` fokussiert
+  bestehenden Client oder öffnet neues Fenster.
+
 ## [2.1.0] – Leave-Fix und Rundenstarter – 2026-09-18
 
 ### Behoben

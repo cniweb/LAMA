@@ -2,10 +2,13 @@ import type { GameVariant } from '@lama/shared';
 import { HelpCircle, LogOut, Sparkles, Wifi, WifiOff } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { DiscardPile } from './components/DiscardPile.js';
+import { InstallButton } from './components/InstallButton.js';
 import { LobbyView } from './components/LobbyView.js';
+import { NotificationButton } from './components/NotificationButton.js';
 import { Opponent } from './components/Opponent.js';
 import { PlayerHand } from './components/PlayerHand.js';
 import { getSavedPlayerName, savePlayerName, useGameSocket } from './hooks/useGameSocket.js';
+import { useTurnNotifications } from './hooks/useTurnNotifications.js';
 
 // Schwergewichtige Modals erst bei Bedarf laden (RoundSummaryModal zieht
 // canvas-confetti in einen separaten Chunk statt in den Initial-Load).
@@ -31,6 +34,8 @@ export function App() {
     playerName,
     variant
   );
+
+  useTurnNotifications(state);
 
   useEffect(() => {
     if (playerName) {
@@ -229,10 +234,14 @@ export function App() {
             </form>
           </div>
 
+          <div className="mt-4 w-full flex justify-center">
+            <InstallButton variant="full" />
+          </div>
+
           <button
             type="button"
             onClick={() => setRulesOpen(true)}
-            className="mt-6 flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-300 transition cursor-pointer"
+            className="mt-3 flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-300 transition cursor-pointer"
           >
             <HelpCircle className="w-4 h-4" />
             <span>Wie funktioniert das Spiel? (Regeln)</span>
@@ -304,6 +313,10 @@ export function App() {
           >
             <HelpCircle className="w-4 h-4" />
           </button>
+
+          <InstallButton />
+
+          <NotificationButton roomCode={roomCode} />
 
           <button
             type="button"
