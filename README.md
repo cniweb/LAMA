@@ -116,3 +116,13 @@ Gelingt es dir, alle deine Handkarten abzulegen und damit die Runde siegreich zu
 * **Klick auf eine Karte** legt sie auf den Ablagestapel.
 * Bei einem Verbindungsabbruch kannst du die Seite einfach neu laden – deine Sitzung wird automatisch wiederhergestellt.
 * Entwickelt mit **Cloudflare Workers (Durable Objects)**, **WebSockets** und **React**.
+
+---
+
+## 🛠 Entwicklung & Mitwirkung
+
+Du möchtest am Projekt mitwirken oder verstehen, wie es technisch funktioniert?
+- [Technischer Stack & Architektur](docs/tech-stack.md) – Details zum Cloudflare-Setup und der Systemarchitektur.
+- [Contribution Guide](CONTRIBUTION.md) – Onboarding-Leitfaden für neue Entwickler.
+- [CHANGELOG](CHANGELOG.md) – Übersicht aller Versionsänderungen.
+
