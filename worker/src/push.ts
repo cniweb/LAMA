@@ -27,7 +27,7 @@ function getVapidKeys(env: Env): { publicKey: string; privateKey: string; subjec
   const priv = (env as unknown as Record<string, string | undefined>).VAPID_PRIVATE_KEY;
   const subject =
     (env as unknown as Record<string, string | undefined>).VAPID_SUBJECT ||
-    'mailto:lama@example.com';
+    'mailto:lama@haeussler.name';
   if (!pub || !priv) return null;
   return { publicKey: pub, privateKey: priv, subject };
 }
