@@ -13,7 +13,7 @@
     "@lama/shared": "*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250224.0",
+    "@cloudflare/workers-types": "^5.20260921.1",
     "typescript": "^7.0.2",
     "wrangler": "^4.133.0"
   }
