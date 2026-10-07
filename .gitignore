@@ -16,3 +16,6 @@ blob-report/
 /.worktrees/
 # Superpowers scratch dirs (ledgers, briefs, review packages)
 .superpowers/
+# Local AI tooling caches (Serena LSP, omo)
+.serena/
+.omo/
