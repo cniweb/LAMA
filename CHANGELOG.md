@@ -6,6 +6,48 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.4.0] – Crazy Edition & Security-/Dependency-Pflege – 2026-10-12
+
+### Hinzugefügt
+- **🦙✨ Crazy Edition – dritte Spielvariante:** Wählbar bei der Raum-Erstellung
+  neben Klassik und Party (gleiches Variantenmodell wie Party, fix bei Erstellung).
+  - **Goldenes Lama (`GL`):** Joker beim Ablegen (passt auf jede Karte) und
+    **Reset** als oberste Karte (die nächste Karte darf beliebig sein). In der
+    Wertung **30 Minuspunkte**; innerhalb der Lama-Gruppe zählt nur die höchste
+    Stufe einmal (`GL` 30 > `PL` 20 > `L` 10, nicht additiv).
+  - **Aktionskarten (zahllos, immer legbar, 0 Minuspunkte, Folgekarte beliebig):**
+    **Skip (`SK`)** überspringt den nächsten aktiven Spieler; **Draw-Two (`D2`)**
+    lässt den nächsten aktiven Spieler bis zu 2 Karten ziehen (best effort bei
+    knappem Stapel) und aussetzen – im Solo-Endspurt verpufft die Aktion;
+    **Gift (`GF`)** gibt automatisch die höchste Handkarte an den aktiven Spieler
+    mit den wenigsten Karten (kein Wartezustand, keine UI-Auswahl).
+  - **Deck:** 63 Karten (Party-Basis + 1× `GL` + je 2× `SK`/`D2`/`GF`). Crazy erbt
+    die pinken 20er-Chips der Party Edition (Werte bis 30 Punkte möglich).
+  - **Frontend:** 3-fache Variantenwahl in der Lobby, Karten-Rendering für die
+    neuen Typen, Lobby- und Raum-Header-Badge, variantenabhängiger `?`-Regel-Dialog.
+  - Abgesichert durch Unit-Tests (`shared/tests/crazy.test.ts`, inkl. Edge Cases)
+    und E2E-Smoke (`frontend/e2e/crazy-flow.spec.ts`); Klassik/Party unverändert.
+
+### Behoben
+- **Security (High, CVE-2026-96889):** `sharp` kam transitiv über
+  `wrangler → miniflare` in Version < 0.35.5 (librsvg-Schwachstelle). `wrangler`
+  auf `^4.149.0` angehoben → zieht `miniflare@5.20261006.1-alpha` mit `sharp@0.35.5`.
+  `npm audit` meldet nun 0 Vulnerabilities (Dependabot-Alert #12 geschlossen).
+- **Service Worker:** Optional-Chaining im Push-Handler (`pending?.roomCode`),
+  behebt die letzte Biome-Warnung – `npm run lint` ist jetzt komplett warnungsfrei.
+
+### Geändert
+- **Dependencies:** `@biomejs/biome` 2.5.14 → 2.5.15, `@vitejs/plugin-react`
+  6.1.1 → 6.1.2 (Vite-8-Peer erfüllt), sowie vorangegangene Bumps (u. a. `vite`
+  8.3.0 → 8.3.2, `vitest` 5.0.1 → 5.0.3, `@types/node`, `lucide-react`,
+  `@cloudflare/workers-types`, `undici`, `source-map-js`).
+- **CI:** Security-Audit report-only, damit Dependency-PRs nicht blockiert werden;
+  `softprops/action-gh-release` 1 → 3. Lokale AI-Tooling-Caches (`.serena`, `.omo`)
+  werden ignoriert.
+- **AGENTS.md:** Lessons Learned 6.19 (Crazy Edition als dritte Raum-Variante) und
+  Nachtrag zu 6.8 (verwaiste `@rollup/rollup-*`-Bindings unter Vite 8/Rolldown
+  sind unkritisch, per CI verifiziert).
+
 ## [2.3.1] – Varianten-Regeln & Doku-Konsistenz – 2026-09-22
 
 ### Geändert
