@@ -22,14 +22,16 @@ function generateRoomCode(): string {
 }
 
 function parseVariant(value: unknown): GameVariant {
-  return value === 'party' ? 'party' : 'classic';
+  if (value === 'party') return 'party';
+  if (value === 'crazy') return 'crazy';
+  return 'classic';
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    // API: Room creation (Variante fix bei Erstellung: 'classic' | 'party')
+    // API: Room creation (Variante fix bei Erstellung: 'classic' | 'party' | 'crazy')
     if (url.pathname === '/api/room/create' && request.method === 'POST') {
       let variant: GameVariant = 'classic';
       try {

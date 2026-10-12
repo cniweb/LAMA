@@ -137,9 +137,9 @@ export function App() {
                   <legend className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                     Spielvariante
                   </legend>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <label
-                      className={`px-3 py-2.5 rounded-xl border font-bold text-sm transition cursor-pointer text-center ${
+                      className={`px-2 py-2.5 rounded-xl border font-bold text-xs sm:text-sm transition cursor-pointer text-center ${
                         variant === 'classic'
                           ? 'bg-amber-400/20 border-amber-400 text-amber-300'
                           : 'bg-slate-950 border-slate-700 text-slate-400 hover:border-slate-500'
@@ -152,11 +152,12 @@ export function App() {
                         checked={variant === 'classic'}
                         onChange={() => setVariant('classic')}
                         className="sr-only"
+                        data-testid="variant-option-classic"
                       />
                       🦙 Klassik
                     </label>
                     <label
-                      className={`px-3 py-2.5 rounded-xl border font-bold text-sm transition cursor-pointer text-center ${
+                      className={`px-2 py-2.5 rounded-xl border font-bold text-xs sm:text-sm transition cursor-pointer text-center ${
                         variant === 'party'
                           ? 'bg-pink-500/20 border-pink-400 text-pink-300'
                           : 'bg-slate-950 border-slate-700 text-slate-400 hover:border-slate-500'
@@ -169,13 +170,38 @@ export function App() {
                         checked={variant === 'party'}
                         onChange={() => setVariant('party')}
                         className="sr-only"
+                        data-testid="variant-option-party"
                       />
                       🎉 Party Edition
+                    </label>
+                    <label
+                      className={`px-2 py-2.5 rounded-xl border font-bold text-xs sm:text-sm transition cursor-pointer text-center ${
+                        variant === 'crazy'
+                          ? 'bg-amber-400/25 border-yellow-500 text-yellow-300'
+                          : 'bg-slate-950 border-slate-700 text-slate-400 hover:border-slate-500'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="game-variant"
+                        value="crazy"
+                        checked={variant === 'crazy'}
+                        onChange={() => setVariant('crazy')}
+                        className="sr-only"
+                        data-testid="variant-option-crazy"
+                      />
+                      🦙✨ Crazy
                     </label>
                   </div>
                   {variant === 'party' && (
                     <p className="mt-1.5 text-[11px] text-pink-300/80 font-semibold">
                       Mit Pluskarten (Extra-Zug!), pinkem Lama-Joker und 20er-Chips.
+                    </p>
+                  )}
+                  {variant === 'crazy' && (
+                    <p className="mt-1.5 text-[11px] text-yellow-300/80 font-semibold">
+                      Party-Mix plus goldenes Lama (Joker + Reset, 30 Punkte) und Aktionskarten
+                      (Skip, Zieh 2, Gift).
                     </p>
                   )}
                 </fieldset>
@@ -299,6 +325,13 @@ export function App() {
                 >
                   🎉 Party
                 </span>
+              ) : state?.variant === 'crazy' ? (
+                <span
+                  data-testid="variant-badge"
+                  className="text-xs px-2 py-0.5 rounded-full bg-amber-400/20 border border-yellow-500/50 text-yellow-300 font-bold shrink-0"
+                >
+                  🦙✨ Crazy
+                </span>
               ) : null}
             </div>
           </div>
@@ -417,7 +450,7 @@ export function App() {
             canFold={state.myPlayer.canFold}
             isSoloEndspurt={state.isSoloEndspurt}
             soloDiscardedValues={state.soloDiscardedValues}
-            isParty={state.variant === 'party'}
+            hasPinkChips={state.variant === 'party' || state.variant === 'crazy'}
             onPlayCard={actions.playCard}
             onDrawCard={actions.drawCard}
             onFold={actions.fold}

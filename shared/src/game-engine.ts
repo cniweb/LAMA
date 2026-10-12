@@ -18,6 +18,31 @@ export function isPlusCard(card: CardValue): boolean {
   return typeof card === 'string' && card.endsWith('+');
 }
 
+/** Goldenes Lama (Crazy Edition): Joker + Reset + 30-Punkte-Strafkarte. */
+export function isGoldenLlama(card: CardValue): boolean {
+  return card === 'GL';
+}
+
+/** Skip-Karte (Crazy Edition): nächster aktiver Spieler wird übersprungen. */
+export function isSkipCard(card: CardValue): boolean {
+  return card === 'SK';
+}
+
+/** Draw-Two-Karte (Crazy Edition): nächster aktiver Spieler zieht 2 und setzt aus. */
+export function isDrawTwoCard(card: CardValue): boolean {
+  return card === 'D2';
+}
+
+/** Gift-Karte (Crazy Edition): höchste Handkarte automatisch weitergeben. */
+export function isGiftCard(card: CardValue): boolean {
+  return card === 'GF';
+}
+
+/** Zahllose Crazy-Aktionskarte (Skip/Draw-Two/Gift)? */
+export function isActionCard(card: CardValue): boolean {
+  return isSkipCard(card) || isDrawTwoCard(card) || isGiftCard(card);
+}
+
 /** Zahlenwert einer Pluskarte (1+ -> 1). */
 export function plusBaseValue(card: CardValue): number | null {
   if (!isPlusCard(card)) return null;
@@ -50,6 +75,14 @@ export function canPlayCard(topCard: CardValue, candidate: CardValue): boolean {
   // Pinkes Lama passt immer (Joker).
   if (candidate === 'PL') return true;
 
+  // Crazy Edition: goldenes Lama und zahllose Aktionskarten (SK/D2/GF)
+  // sind beim Ablegen immer legbar (Joker/zahllos).
+  if (isGoldenLlama(candidate) || isActionCard(candidate)) return true;
+
+  // Crazy Edition: liegt oben ein goldenes Lama (Reset) oder eine zahllose
+  // Aktionskarte, darf eine beliebige Folgekarte gelegt werden.
+  if (isGoldenLlama(topCard) || isActionCard(topCard)) return true;
+
   const top = normalizedTop(topCard);
   const cand = normalizedCandidate(candidate);
 
@@ -68,13 +101,16 @@ export function canPlayCard(topCard: CardValue, candidate: CardValue): boolean {
   return cand === top || (typeof top === 'number' && cand === top + 1);
 }
 
-/** Basiswert für Solo-Einmaligkeit: Plus -> Zahl, PL -> 'L' (Lama-Gruppe). */
-function soloKey(card: CardValue): number | 'L' {
-  if (card === 'PL') return 'L';
+/**
+ * Basiswert für Solo-Einmaligkeit: Plus -> Zahl, PL/GL -> 'L' (Lama-Gruppe).
+ * Zahllose Aktionskarten (SK/D2/GF) bilden je eine eigene Gruppe (eindeutiger Key).
+ */
+function soloKey(card: CardValue): number | string {
+  if (card === 'PL' || card === 'GL') return 'L';
   if (isPlusCard(card)) {
     return plusBaseValue(card) ?? (card as unknown as number);
   }
-  return card as number | 'L';
+  return card as number | string;
 }
 
 function soloAlreadyPlayed(values: CardValue[] | null | undefined, card: CardValue): boolean {
@@ -83,10 +119,17 @@ function soloAlreadyPlayed(values: CardValue[] | null | undefined, card: CardVal
   return values.some((v) => soloKey(v) === key);
 }
 
-/** Sortierschlüssel für Client-Hand (1..6, Plus direkt nach Basis, L, PL zuletzt). */
+/**
+ * Sortierschlüssel für Client-Hand (1..6, Plus direkt nach Basis, dann
+ * Lama-Gruppe L/PL/GL, zuletzt die zahllosen Crazy-Aktionskarten).
+ */
 function cardSortKey(card: CardValue): number {
   if (card === 'L') return 100;
   if (card === 'PL') return 101;
+  if (card === 'GL') return 102;
+  if (card === 'SK') return 110;
+  if (card === 'D2') return 111;
+  if (card === 'GF') return 112;
   if (isPlusCard(card)) {
     return (plusBaseValue(card) ?? 0) + 0.5;
   }
@@ -97,11 +140,16 @@ export function calculateUniquePoints(cards: CardValue[]): number {
   const seenNumbers = new Set<number>();
   let hasLlama = false;
   let hasPinkLlama = false;
+  let hasGoldenLlama = false;
   for (const card of cards) {
-    if (card === 'PL') {
+    if (card === 'GL') {
+      hasGoldenLlama = true;
+    } else if (card === 'PL') {
       hasPinkLlama = true;
     } else if (card === 'L') {
       hasLlama = true;
+    } else if (isActionCard(card)) {
+      // Zahllose Aktionskarten (SK/D2/GF) zählen 0 Minuspunkte.
     } else if (isPlusCard(card)) {
       const base = plusBaseValue(card);
       if (base !== null) seenNumbers.add(base);
@@ -111,7 +159,10 @@ export function calculateUniquePoints(cards: CardValue[]): number {
   }
   let total = 0;
   for (const n of seenNumbers) total += n;
-  if (hasPinkLlama) {
+  // Lama-Gruppe zählt nur die höchste Stufe einmal: GL (30) > PL (20) > L (10).
+  if (hasGoldenLlama) {
+    total += 30;
+  } else if (hasPinkLlama) {
     total += 20;
   } else if (hasLlama) {
     total += 10;
@@ -120,7 +171,8 @@ export function calculateUniquePoints(cards: CardValue[]): number {
 }
 
 export function pointsToChips(points: number, variant: GameVariant = 'classic'): ChipCount {
-  if (variant === 'party') {
+  // Party und Crazy nutzen pinke 20er-Chips (Crazy wegen GL=30 Punkte).
+  if (variant === 'party' || variant === 'crazy') {
     const pink = Math.floor(points / 20);
     const rest = points % 20;
     const black = Math.floor(rest / 10);
@@ -165,6 +217,54 @@ export function getNextActiveTurnIndex(
     }
   }
   return currentIndex;
+}
+
+/**
+ * Rang einer Karte für die Gift-Weitergabe (höchste Karte wird verschenkt):
+ * GL (30) > PL (20) > L (10) > 6 > ... > 1. Zahllose Aktionskarten (SK/D2/GF)
+ * zählen 0 und werden damit nur verschenkt, wenn nichts Höheres auf der Hand ist.
+ */
+function giftRank(card: CardValue): number {
+  if (card === 'GL') return 30;
+  if (card === 'PL') return 20;
+  if (card === 'L') return 10;
+  if (isActionCard(card)) return 0;
+  if (isPlusCard(card)) return plusBaseValue(card) ?? 0;
+  return card as number;
+}
+
+/** Die (nach giftRank) höchste Handkarte; null bei leerer Hand. */
+export function highestHandCard(hand: CardValue[]): CardValue | null {
+  if (hand.length === 0) return null;
+  let best = hand[0];
+  for (const card of hand) {
+    if (giftRank(card) > giftRank(best)) best = card;
+  }
+  return best;
+}
+
+/**
+ * Aktiver Spieler mit den wenigsten Handkarten (exklusive `excludeId`).
+ * Bei Gleichstand gewinnt der nächste in Zugreihenfolge ab `excludeId`.
+ */
+export function fewestCardsActivePlayerId(state: GameState, excludeId: string): string | null {
+  const total = state.playerOrder.length;
+  const startIdx = state.playerOrder.indexOf(excludeId);
+  let bestId: string | null = null;
+  let bestCount = Number.POSITIVE_INFINITY;
+  // Reihenfolge ab dem Ableger durchlaufen -> deterministische Gleichstand-Auflösung.
+  for (let i = 1; i <= total; i++) {
+    const idx = startIdx === -1 ? (i - 1) % total : (startIdx + i) % total;
+    const id = state.playerOrder[idx];
+    if (id === excludeId) continue;
+    const player = state.players[id];
+    if (player?.status !== 'ACTIVE') continue;
+    if (player.hand.length < bestCount) {
+      bestCount = player.hand.length;
+      bestId = id;
+    }
+  }
+  return bestId;
 }
 
 export function createInitialGameState(
@@ -380,10 +480,98 @@ export function playCard(state: GameState, playerId: string, card: CardValue): G
     };
   }
 
+  // Crazy Edition: Gift -> höchste Handkarte automatisch an den aktiven Spieler
+  // mit den wenigsten Karten; danach normaler Zugwechsel. Verpufft im Solo
+  // (kein anderer aktiver Spieler) oder bei leerer Resthand.
+  if (isGiftCard(card)) {
+    const playersAfterGift = { ...state.players, [playerId]: updatedPlayer };
+    const targetId = fewestCardsActivePlayerId(state, playerId);
+    const giftCard = highestHandCard(updatedPlayer.hand);
+    if (targetId && giftCard !== null) {
+      const giverHand = [...updatedPlayer.hand];
+      giverHand.splice(giverHand.indexOf(giftCard), 1);
+      const target = state.players[targetId];
+      playersAfterGift[playerId] = { ...updatedPlayer, hand: giverHand };
+      playersAfterGift[targetId] = { ...target, hand: [...target.hand, giftCard] };
+    }
+    const nextTurnIndex = getNextActiveTurnIndex(
+      state.playerOrder,
+      playersAfterGift,
+      state.turnIndex
+    );
+    return {
+      ...state,
+      discardPile: updatedDiscardPile,
+      soloDiscardedValues: soloValues,
+      players: playersAfterGift,
+      turnIndex: nextTurnIndex,
+    };
+  }
+
+  const playersAfterPlay = { ...state.players, [playerId]: updatedPlayer };
+
+  // Crazy Edition: Skip -> der nächste aktive Spieler wird übersprungen, also
+  // zweimal vorrücken. Bei nur 2 aktiven Spielern landet der Zug wieder beim
+  // Ableger (gewollter Effekt: er ist sofort nochmal dran).
+  if (isSkipCard(card)) {
+    const afterFirst = getNextActiveTurnIndex(state.playerOrder, playersAfterPlay, state.turnIndex);
+    const afterSkip = getNextActiveTurnIndex(state.playerOrder, playersAfterPlay, afterFirst);
+    return {
+      ...state,
+      discardPile: updatedDiscardPile,
+      soloDiscardedValues: soloValues,
+      players: playersAfterPlay,
+      turnIndex: afterSkip,
+    };
+  }
+
+  // Crazy Edition: Draw-Two -> der nächste aktive Spieler zieht bis zu 2 Karten
+  // (best effort bei knappem Stapel) und setzt aus (zweimal vorrücken). Im
+  // Solo-Endspurt gibt es keinen anderen aktiven Spieler -> die Aktion verpufft.
+  if (isDrawTwoCard(card)) {
+    if (isSoloEndspurt(state)) {
+      const soloNext = getNextActiveTurnIndex(state.playerOrder, playersAfterPlay, state.turnIndex);
+      return {
+        ...state,
+        discardPile: updatedDiscardPile,
+        soloDiscardedValues: soloValues,
+        players: playersAfterPlay,
+        turnIndex: soloNext,
+      };
+    }
+    const victimIndex = getNextActiveTurnIndex(
+      state.playerOrder,
+      playersAfterPlay,
+      state.turnIndex
+    );
+    const victimId = state.playerOrder[victimIndex];
+    const victim = playersAfterPlay[victimId];
+    const newDrawPile = [...state.drawPile];
+    const drawn: CardValue[] = [];
+    for (let i = 0; i < 2; i++) {
+      const c = newDrawPile.pop();
+      if (c === undefined) break;
+      drawn.push(c);
+    }
+    if (victim) {
+      playersAfterPlay[victimId] = { ...victim, hand: [...victim.hand, ...drawn] };
+    }
+    // Opfer setzt aus: vom Opfer-Index aus einmal weiter zum nächsten Aktiven.
+    const afterVictim = getNextActiveTurnIndex(state.playerOrder, playersAfterPlay, victimIndex);
+    return {
+      ...state,
+      discardPile: updatedDiscardPile,
+      drawPile: newDrawPile,
+      soloDiscardedValues: soloValues,
+      players: playersAfterPlay,
+      turnIndex: afterVictim,
+    };
+  }
+
   // Next player's turn
   const nextTurnIndex = getNextActiveTurnIndex(
     state.playerOrder,
-    { ...state.players, [playerId]: updatedPlayer },
+    playersAfterPlay,
     state.turnIndex
   );
 
@@ -391,10 +579,7 @@ export function playCard(state: GameState, playerId: string, card: CardValue): G
     ...state,
     discardPile: updatedDiscardPile,
     soloDiscardedValues: soloValues,
-    players: {
-      ...state.players,
-      [playerId]: updatedPlayer,
-    },
+    players: playersAfterPlay,
     turnIndex: nextTurnIndex,
   };
 }
@@ -622,8 +807,9 @@ export function exchangeChipsUp(
       players: { ...state.players, [playerId]: updatedPlayer },
     };
   }
-  if ((state.variant ?? 'classic') !== 'party') {
-    throw new Error('Pinke Chips gibt es nur in der Party Edition.');
+  const variant = state.variant ?? 'classic';
+  if (variant !== 'party' && variant !== 'crazy') {
+    throw new Error('Pinke Chips gibt es nur in der Party- und Crazy-Edition.');
   }
   if (chips.black < 2) {
     throw new Error('Mindestens 2 schwarze Chips für den Tausch in pink erforderlich.');

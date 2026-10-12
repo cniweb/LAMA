@@ -15,7 +15,8 @@ interface PlayerHandProps {
   canFold: boolean;
   isSoloEndspurt: boolean;
   soloDiscardedValues?: CardValue[] | null;
-  isParty?: boolean;
+  /** Varianten mit pinken 20er-Chips (Party & Crazy) zeigen den Pink-Tausch. */
+  hasPinkChips?: boolean;
   onPlayCard: (card: CardValue) => void;
   onDrawCard: () => void;
   onFold: () => void;
@@ -33,7 +34,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   canFold,
   isSoloEndspurt,
   soloDiscardedValues,
-  isParty = false,
+  hasPinkChips = false,
   onPlayCard,
   onDrawCard,
   onFold,
@@ -59,13 +60,13 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               10→1 tauschen
             </button>
           )}
-          {onExchangeChips && isParty && chips.black >= 2 && (
+          {onExchangeChips && hasPinkChips && chips.black >= 2 && (
             <button
               type="button"
               onClick={() => onExchangeChips('black')}
               data-testid="exchange-black-to-pink-button"
               className="px-2.5 py-1.5 min-h-[44px] rounded-lg bg-pink-950/60 hover:bg-pink-900 border border-pink-400/40 text-pink-300 font-bold text-xs shadow transition-all cursor-pointer hover:scale-105"
-              title="2 schwarze Chips gegen 1 pinken 20er-Chip tauschen (Party Edition)"
+              title="2 schwarze Chips gegen 1 pinken 20er-Chip tauschen (Party & Crazy)"
             >
               2×10→20 tauschen
             </button>

@@ -15,16 +15,26 @@ interface CardProps {
 }
 
 function cardLabel(value: CardValue): string {
-  if (value === 'L') return '🦙';
-  if (value === 'PL') return '🦙';
+  if (value === 'L' || value === 'PL' || value === 'GL') return '🦙';
+  if (value === 'SK') return '⛔';
+  if (value === 'D2') return '+2';
+  if (value === 'GF') return '🎁';
   if (typeof value === 'string') return value.replace('+', '+');
   return String(value);
 }
 
 function cardNumber(value: CardValue): string {
-  if (value === 'L' || value === 'PL') return '🦙';
+  if (value === 'L' || value === 'PL' || value === 'GL') return '🦙';
+  if (value === 'SK') return '⛔';
+  if (value === 'D2') return '+2';
+  if (value === 'GF') return '🎁';
   if (typeof value === 'string') return value[0];
   return String(value);
+}
+
+/** Crazy-Aktionskarte (Skip/Draw-Two/Gift)? */
+function isActionCardValue(value: CardValue): boolean {
+  return value === 'SK' || value === 'D2' || value === 'GF';
 }
 
 const CARD_STYLES: Record<CardValue, { bg: string; text: string; border: string }> = {
@@ -42,7 +52,21 @@ const CARD_STYLES: Record<CardValue, { bg: string; text: string; border: string 
   '4+': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300' },
   '5+': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300' },
   '6+': { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300' },
+  // Crazy Edition: goldenes Lama + zahllose Aktionskarten.
+  GL: { bg: 'bg-amber-400', text: 'text-amber-950', border: 'border-yellow-600' },
+  SK: { bg: 'bg-red-200', text: 'text-red-900', border: 'border-red-400' },
+  D2: { bg: 'bg-cyan-200', text: 'text-cyan-900', border: 'border-cyan-400' },
+  GF: { bg: 'bg-fuchsia-200', text: 'text-fuchsia-900', border: 'border-fuchsia-400' },
 };
+
+/** Tooltip-Text für die Crazy-Aktionskarten und das goldene Lama. */
+function crazyTitle(value: CardValue): string | null {
+  if (value === 'GL') return 'Goldenes Lama (Joker + Reset, 30 Minuspunkte)';
+  if (value === 'SK') return 'Skip: nächster Spieler wird übersprungen';
+  if (value === 'D2') return 'Draw-Two: nächster Spieler zieht 2 und setzt aus';
+  if (value === 'GF') return 'Gift: höchste Handkarte geht an den Spieler mit den wenigsten Karten';
+  return null;
+}
 
 export const Card: React.FC<CardProps> = memo(function Card({
   value,
@@ -87,6 +111,9 @@ export const Card: React.FC<CardProps> = memo(function Card({
   const style = CARD_STYLES[value];
   const isPlus = typeof value === 'string' && value.endsWith('+');
   const isPink = value === 'PL';
+  const isGolden = value === 'GL';
+  const isAction = isActionCardValue(value);
+  const crazyTooltip = crazyTitle(value);
 
   return (
     <button
@@ -94,11 +121,13 @@ export const Card: React.FC<CardProps> = memo(function Card({
       disabled={disabled || !interactive}
       onClick={interactive ? handleClick : undefined}
       title={
-        isPink
-          ? 'Pinkes Lama (Joker)'
-          : isPlus
-            ? `${value} (Pluskarte: Extra-Zug)`
-            : cardLabel(value)
+        crazyTooltip
+          ? crazyTooltip
+          : isPink
+            ? 'Pinkes Lama (Joker)'
+            : isPlus
+              ? `${value} (Pluskarte: Extra-Zug)`
+              : cardLabel(value)
       }
       className={`relative select-none font-black flex flex-col justify-between p-1.5 sm:p-2.5 shadow-lg transition-all duration-150 ${style.bg} ${style.text} ${style.border} ${sizeClasses} ${
         playable ? 'card-playable cursor-pointer' : ''
@@ -109,19 +138,27 @@ export const Card: React.FC<CardProps> = memo(function Card({
         {cardNumber(value)}
         {isPlus && <span className="text-emerald-600">+</span>}
         {isPink && <span className="text-pink-600 text-[10px]">★</span>}
+        {isGolden && <span className="text-yellow-700 text-[10px]">★</span>}
       </div>
 
       {/* Card Center Illustration */}
       <div className="self-center flex flex-col items-center justify-center my-auto leading-none">
-        {value === 'L' || value === 'PL' ? (
+        {value === 'L' || value === 'PL' || value === 'GL' ? (
           <div className="flex flex-col items-center">
             <span className="text-2xl sm:text-4xl filter drop-shadow">🦙</span>
             <span
               className={`text-[10px] sm:text-xs font-black tracking-wider uppercase mt-0.5 px-1 rounded ${
-                isPink ? 'bg-pink-500/30' : 'bg-amber-500/20'
+                isPink ? 'bg-pink-500/30' : isGolden ? 'bg-yellow-600/30' : 'bg-amber-500/20'
               }`}
             >
-              {isPink ? 'PINK' : 'LAMA'}
+              {isPink ? 'PINK' : isGolden ? 'GOLD' : 'LAMA'}
+            </span>
+          </div>
+        ) : isAction ? (
+          <div className="flex flex-col items-center">
+            <span className="text-2xl sm:text-4xl filter drop-shadow">{cardNumber(value)}</span>
+            <span className="text-[10px] sm:text-xs font-black tracking-wider uppercase mt-0.5 px-1 rounded bg-black/10">
+              {value === 'SK' ? 'SKIP' : value === 'D2' ? 'ZIEH 2' : 'GIFT'}
             </span>
           </div>
         ) : (

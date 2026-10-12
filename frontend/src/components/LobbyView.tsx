@@ -49,6 +49,10 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ state, onStartGame }) => {
         <p className="text-xs sm:text-sm font-bold text-pink-300 bg-pink-500/15 border border-pink-400/40 rounded-full px-3 py-1 mb-3">
           🎉 Party Edition – Pluskarten, pinkes Lama & 20er-Chips!
         </p>
+      ) : state.variant === 'crazy' ? (
+        <p className="text-xs sm:text-sm font-bold text-yellow-300 bg-amber-400/15 border border-yellow-500/40 rounded-full px-3 py-1 mb-3 text-center">
+          🦙✨ Crazy Edition – goldenes Lama & Aktionskarten (Skip, Zieh 2, Gift)!
+        </p>
       ) : null}
       <p className="text-xs sm:text-sm text-slate-400 text-center mb-6">
         Lade deine Freunde ein. Sobald mindestens 2 Spieler im Raum sind, kann es losgehen!

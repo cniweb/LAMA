@@ -29,12 +29,20 @@ Versuche, deine Handkarten so schnell wie möglich loszuwerden. Denn jede Karte,
 > * Auf das **pinke Lama** darf nur ein Lama oder eine 1 gelegt werden. In der Wertung zählen Lamas mit pinkem Lama **20** statt 10.
 > * Zusätzlich **pinke 20er-Chips** (Tausch: 2× schwarz → pink). Bonus bei leerer Hand: 1er, 10er oder 20er abgeben.
 
+> **🦙✨ Crazy Edition (wählbar beim Erstellen des Raumes):**
+> * **63 Karten:** die komplette Party-Basis (7x 1–6, 6 Pluskarten, 7x Lama, 1x pinkes Lama) **plus** 1x **goldenes Lama** und je 2x **Skip**, **Zieh 2** und **Gift**.
+> * **Goldenes Lama (GL):** Joker – passt auf jede Karte. Als oberste Karte ist es ein **Reset**: Die nächste Karte darf beliebig sein. In der Wertung zählt es **30 Minuspunkte**; innerhalb der Lama-Gruppe zählt nur die höchste Stufe (GL 30 > pinkes Lama 20 > Lama 10, jeweils nur einmal).
+> * **Skip:** Der nächste aktive Spieler wird übersprungen.
+> * **Zieh 2 (Draw-Two):** Der nächste aktive Spieler zieht bis zu 2 Karten (so viele wie möglich) und setzt aus. Im Solo-Endspurt verpufft die Aktion.
+> * **Gift:** Deine höchste Handkarte geht automatisch an den aktiven Spieler mit den wenigsten Karten.
+> * Alle drei Aktionskarten sind **immer legbar**, zählen **0 Minuspunkte** und erlauben als oberste Karte eine beliebige Folgekarte. Pluskarten, pinkes Lama und 20er-Chips gelten wie in der Party Edition.
+
 ---
 
 ## 🚀 Spielvorbereitung & Start
 
 1. **Raum erstellen oder beitreten:**
-   * Gib deinen Spielernamen ein, wähle die **Spielvariante (Klassik oder 🎉 Party Edition)** und klicke auf **„Neues Spiel erstellen“**.
+   * Gib deinen Spielernamen ein, wähle die **Spielvariante (Klassik, 🎉 Party Edition oder 🦙✨ Crazy Edition)** und klicke auf **„Neues Spiel erstellen“**.
    * Teile den 4-stelligen Raum-Code oder den direkten Einladungslink mit 1 bis 5 Freunden (insgesamt 2 bis 6 Spieler).
 2. **Karten austeilen:**
    * Alle Spieler erhalten zu Beginn jedes Durchgangs verdeckt **6 Handkarten**.
@@ -114,7 +122,7 @@ Gelingt es dir, alle deine Handkarten abzulegen und damit die Runde siegreich zu
 
 * **Gültige Karten** werden auf deiner Hand automatisch hervorgehoben.
 * **Klick auf eine Karte** legt sie auf den Ablagestapel.
-* **Regeln (?)** zeigen immer die **vollständigen Regeln der gewählten Variante** (Klassik: 56 Karten 8×1–6/8×Lama, 70 Chips; Party: Pluskarten, pinkes Lama, 20er-Chips).
+* **Regeln (?)** zeigen immer die **vollständigen Regeln der gewählten Variante** (Klassik: 56 Karten 8×1–6/8×Lama, 70 Chips; Party: Pluskarten, pinkes Lama, 20er-Chips; Crazy: zusätzlich goldenes Lama & Aktionskarten Skip/Zieh 2/Gift).
 * **Version (i)** unten auf der Startseite und im Raum-Header zeigt die aktuelle `package.json`-Version + Link zum [Changelog](https://github.com/cniweb/LAMA/blob/main/CHANGELOG.md).
 * **Installation:** `Download`-Button (Header + über Regeln) installiert die PWA auf Startbildschirm/Desktop.
 * **Benachrichtigungen:** Glocke im Header abonniert Push-Benachrichtigungen — du wirst auch bei geschlossenem Browser benachrichtigt, wenn du am Zug bist (Klick öffnet Raum `/?room=CODE`).
