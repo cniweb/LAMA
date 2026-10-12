@@ -44,17 +44,27 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 
   return (
     <div className="w-full flex flex-col items-center gap-3 pb-[env(safe-area-inset-bottom)]">
-      {/* Turn Action Controls Header */}
-      <div className="flex flex-col gap-1 sm:gap-2 sm:flex-row sm:items-center sm:justify-between w-full max-w-2xl px-3 sm:px-4 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-xs sm:text-sm font-extrabold text-slate-300">Deine Chips:</span>
+      {/* Turn Action Controls Header
+          Einheitliche Höhe (min-h), damit die Zeile nicht springt, egal ob
+          Tausch-/Aktions-Buttons sichtbar sind. Immer eine Flex-Row mit
+          vertikaler Zentrierung; einzelne Blöcke dürfen bei Platzmangel intern
+          umbrechen (flex-wrap), die Container-Höhe bleibt dabei konstant.
+          Alle interaktiven Elemente teilen die gleiche Höhe (h-11 = 44px Touch). */}
+      <div
+        data-testid="controls-bar"
+        className="flex flex-row items-center justify-between gap-2 sm:gap-3 w-full max-w-2xl h-[60px] px-3 sm:px-4 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm overflow-x-auto overflow-y-hidden"
+      >
+        <div className="flex items-center gap-x-2 gap-y-0 min-w-0">
+          <span className="text-xs sm:text-sm font-extrabold text-slate-300 whitespace-nowrap">
+            Deine Chips:
+          </span>
           <ChipDisplay chips={chips} totalScore={totalScore} size="sm" />
           {onExchangeChips && chips.white >= 10 && (
             <button
               type="button"
               onClick={() => onExchangeChips('white')}
               data-testid="exchange-chips-button"
-              className="px-2.5 py-1.5 min-h-[44px] rounded-lg bg-slate-800 hover:bg-slate-700 border border-amber-400/40 text-amber-300 font-bold text-xs shadow transition-all cursor-pointer hover:scale-105"
+              className="inline-flex items-center h-11 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-amber-400/40 text-amber-300 font-bold text-xs shadow transition-all cursor-pointer hover:scale-105 whitespace-nowrap shrink-0"
               title="10 weiße Chips gegen 1 schwarzen Chip tauschen"
             >
               10→1 tauschen
@@ -65,7 +75,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               type="button"
               onClick={() => onExchangeChips('black')}
               data-testid="exchange-black-to-pink-button"
-              className="px-2.5 py-1.5 min-h-[44px] rounded-lg bg-pink-950/60 hover:bg-pink-900 border border-pink-400/40 text-pink-300 font-bold text-xs shadow transition-all cursor-pointer hover:scale-105"
+              className="inline-flex items-center h-11 px-2.5 rounded-lg bg-pink-950/60 hover:bg-pink-900 border border-pink-400/40 text-pink-300 font-bold text-xs shadow transition-all cursor-pointer hover:scale-105 whitespace-nowrap shrink-0"
               title="2 schwarze Chips gegen 1 pinken 20er-Chip tauschen (Party & Crazy)"
             >
               2×10→20 tauschen
@@ -74,10 +84,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
         </div>
 
         {isTurn ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <span
               data-testid="turn-indicator"
-              className="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider animate-pulse"
+              className="inline-flex items-center h-11 px-2.5 rounded-full bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider animate-pulse whitespace-nowrap"
             >
               Du bist am Zug!
             </span>
@@ -86,10 +96,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 type="button"
                 onClick={onFold}
                 data-testid="fold-button"
-                className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg bg-rose-600/80 hover:bg-rose-600 text-rose-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105"
+                className="inline-flex items-center gap-1.5 h-11 px-3 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-rose-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105 whitespace-nowrap"
                 title="Aus dem Durchgang aussteigen und aktuelle Handkarten verdeckt sichern"
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut className="w-3.5 h-3.5 shrink-0" />
                 <span>Aussteigen</span>
               </button>
             )}
@@ -98,20 +108,22 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 type="button"
                 onClick={onDrawCard}
                 data-testid="draw-button"
-                className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-lg bg-blue-600/80 hover:bg-blue-600 text-blue-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105"
+                className="inline-flex items-center gap-1.5 h-11 px-3 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-blue-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105 whitespace-nowrap"
                 title="1 Karte vom Nachziehstapel ziehen"
               >
-                <PlusCircle className="w-3.5 h-3.5" />
+                <PlusCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>Ziehen</span>
               </button>
             )}
           </div>
         ) : isFolded ? (
-          <span className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 font-bold text-xs uppercase tracking-wider">
+          <span className="inline-flex items-center h-11 px-2.5 rounded-full bg-slate-800 text-slate-400 font-bold text-xs uppercase tracking-wider whitespace-nowrap shrink-0">
             Du bist ausgestiegen
           </span>
         ) : (
-          <span className="text-xs font-semibold text-slate-400">Warten auf Mitspieler...</span>
+          <span className="inline-flex items-center h-11 text-xs font-semibold text-slate-400 whitespace-nowrap shrink-0">
+            Warten auf Mitspieler...
+          </span>
         )}
       </div>
 
