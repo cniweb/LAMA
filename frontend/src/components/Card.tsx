@@ -7,7 +7,7 @@ interface CardProps {
   faceDown?: boolean;
   playable?: boolean;
   disabled?: boolean;
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
   /** Stabile Alternative zu onClick: wird mit `value` aufgerufen (memo-freundlich). */
   onPlay?: (card: CardValue) => void;
@@ -87,7 +87,11 @@ export const Card: React.FC<CardProps> = memo(function Card({
   }, [onClick, onPlay, value]);
 
   const interactive = playable && (onClick !== undefined || onPlay !== undefined);
+  // Kompakte Mini-Karte (z. B. in der Rundenabrechnung): fester, kleiner Rahmen,
+  // bei dem Sonderkarten-Labels ausgeblendet werden, damit nichts überläuft.
+  const isCompact = size === 'xxs';
   const sizeClasses = {
+    xxs: 'w-7 h-10 text-[11px] rounded border',
     xs: 'w-12 h-[76px] text-lg rounded-lg border-2',
     sm: 'w-10 h-16 text-sm rounded-md border-2',
     md: 'w-16 h-24 sm:w-20 sm:h-32 text-xl sm:text-2xl rounded-xl border-3 sm:border-4',
@@ -129,37 +133,58 @@ export const Card: React.FC<CardProps> = memo(function Card({
               ? `${value} (Pluskarte: Extra-Zug)`
               : cardLabel(value)
       }
-      className={`relative select-none font-black flex flex-col justify-between p-1.5 sm:p-2.5 shadow-lg transition-all duration-150 ${style.bg} ${style.text} ${style.border} ${sizeClasses} ${
+      className={`relative select-none overflow-hidden font-black flex flex-col justify-between ${
+        isCompact ? 'p-0.5' : 'p-1.5 sm:p-2.5'
+      } shadow-lg transition-all duration-150 ${style.bg} ${style.text} ${style.border} ${sizeClasses} ${
         playable ? 'card-playable cursor-pointer' : ''
       } ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${className}`}
     >
-      {/* Top Left Corner */}
-      <div className="self-start leading-none font-extrabold text-xs sm:text-base">
-        {cardNumber(value)}
-        {isPlus && <span className="text-emerald-600">+</span>}
-        {isPink && <span className="text-pink-600 text-[10px]">★</span>}
-        {isGolden && <span className="text-yellow-700 text-[10px]">★</span>}
-      </div>
+      {/* Top Left Corner (in der Mini-Karte ausgeblendet, um Platz zu sparen) */}
+      {!isCompact && (
+        <div className="self-start leading-none font-extrabold text-xs sm:text-base">
+          {cardNumber(value)}
+          {isPlus && <span className="text-emerald-600">+</span>}
+          {isPink && <span className="text-pink-600 text-[10px]">★</span>}
+          {isGolden && <span className="text-yellow-700 text-[10px]">★</span>}
+        </div>
+      )}
 
       {/* Card Center Illustration */}
-      <div className="self-center flex flex-col items-center justify-center my-auto leading-none">
+      <div
+        className={`flex flex-col items-center justify-center leading-none ${
+          isCompact ? 'flex-1' : 'self-center my-auto'
+        }`}
+      >
         {value === 'L' || value === 'PL' || value === 'GL' ? (
           <div className="flex flex-col items-center">
-            <span className="text-2xl sm:text-4xl filter drop-shadow">🦙</span>
             <span
-              className={`text-[10px] sm:text-xs font-black tracking-wider uppercase mt-0.5 px-1 rounded ${
-                isPink ? 'bg-pink-500/30' : isGolden ? 'bg-yellow-600/30' : 'bg-amber-500/20'
-              }`}
+              className={`${isCompact ? 'text-sm' : 'text-2xl sm:text-4xl'} filter drop-shadow`}
             >
-              {isPink ? 'PINK' : isGolden ? 'GOLD' : 'LAMA'}
+              🦙
             </span>
+            {/* Textlabel nur außerhalb der Mini-Karte – sonst läuft der Inhalt über. */}
+            {!isCompact && (
+              <span
+                className={`text-[10px] sm:text-xs font-black tracking-wider uppercase mt-0.5 px-1 rounded ${
+                  isPink ? 'bg-pink-500/30' : isGolden ? 'bg-yellow-600/30' : 'bg-amber-500/20'
+                }`}
+              >
+                {isPink ? 'PINK' : isGolden ? 'GOLD' : 'LAMA'}
+              </span>
+            )}
           </div>
         ) : isAction ? (
           <div className="flex flex-col items-center">
-            <span className="text-2xl sm:text-4xl filter drop-shadow">{cardNumber(value)}</span>
-            <span className="text-[10px] sm:text-xs font-black tracking-wider uppercase mt-0.5 px-1 rounded bg-black/10">
-              {value === 'SK' ? 'SKIP' : value === 'D2' ? 'ZIEH 2' : 'GIFT'}
+            <span
+              className={`${isCompact ? 'text-sm' : 'text-2xl sm:text-4xl'} filter drop-shadow`}
+            >
+              {cardNumber(value)}
             </span>
+            {!isCompact && (
+              <span className="text-[10px] sm:text-xs font-black tracking-wider uppercase mt-0.5 px-1 rounded bg-black/10">
+                {value === 'SK' ? 'SKIP' : value === 'D2' ? 'ZIEH 2' : 'GIFT'}
+              </span>
+            )}
           </div>
         ) : (
           <span className="font-black tracking-tighter drop-shadow-sm">
@@ -169,11 +194,13 @@ export const Card: React.FC<CardProps> = memo(function Card({
         )}
       </div>
 
-      {/* Bottom Right Corner */}
-      <div className="self-end leading-none font-extrabold rotate-180 text-xs sm:text-base">
-        {cardNumber(value)}
-        {isPlus && <span className="text-emerald-600">+</span>}
-      </div>
+      {/* Bottom Right Corner (in der Mini-Karte ausgeblendet) */}
+      {!isCompact && (
+        <div className="self-end leading-none font-extrabold rotate-180 text-xs sm:text-base">
+          {cardNumber(value)}
+          {isPlus && <span className="text-emerald-600">+</span>}
+        </div>
+      )}
     </button>
   );
 });
