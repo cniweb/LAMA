@@ -57,7 +57,7 @@ self.addEventListener('push', (event) => {
             );
             if (res.ok) {
               const pending = await res.json();
-              if (pending && pending.roomCode) {
+              if (pending?.roomCode) {
                 data = { ...pending, ...data };
                 if (!data.url && pending.roomCode) data.url = `/?room=${pending.roomCode}`;
                 if (!data.title && pending.title) data.title = pending.title;
