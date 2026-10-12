@@ -6,6 +6,21 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.4.1] – Rundenende-Fix – 2026-10-12
+
+### Behoben
+- **Rundenende sperrt Weiterspielen:** Legt ein Spieler seine letzte Handkarte ab,
+  endet der Durchgang jetzt zuverlässig für **alle** – kein nachträgliches
+  „Solo"-Weiterspielen mehr. Ursache war, dass `settleRound` nach dem Leerspielen
+  den Bonus-Chip-Dialog öffnet und die Phase bewusst auf `IN_ROUND` lässt, die
+  Zug-Handler (`playCard`/`drawCard`/`foldPlayer`) aber nur die Phase prüften und
+  nicht den offenen Bonus-Dialog (`pendingChipDiscardPlayerId`). Dadurch konnte
+  ein anderer Spieler im Zwischenzustand weiter Karten ablegen. Die Handler lehnen
+  solche Züge nun mit einer klaren Meldung ab, und `filterStateForClient` bietet
+  während des Bonus-Dialogs keine Aktionen mehr an (UI konsistent zum Server).
+  Gilt für alle Varianten (Klassik/Party/Crazy); die Bonus-Chip-Belohnung des
+  Finishers funktioniert unverändert. Abgesichert durch `shared/tests/round-end.test.ts`.
+
 ## [2.4.0] – Crazy Edition & Security-/Dependency-Pflege – 2026-10-12
 
 ### Hinzugefügt
