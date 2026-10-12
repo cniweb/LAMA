@@ -6,6 +6,18 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.4.2] – Abrechnungs-Darstellung – 2026-10-12
+
+### Behoben
+- **Karten in der Rundenabrechnung liefen über:** In der Abrechnung
+  (`RoundSummaryModal`) wurden die Restkarten per `!important`-Overrides in eine
+  Minigröße gezwängt. Sonderkarten (Lama, pinkes/goldenes Lama, Aktionskarten)
+  rendern aber ein großes Emoji samt Textlabel darunter und ragten dadurch über
+  den Kasten des jeweiligen Spielers hinaus. Neu gibt es eine echte, kompakte
+  Kartengröße `xxs` mit `overflow`-Clipping, die bei Sonderkarten das Textlabel
+  ausblendet und das Emoji verkleinert – die Karten bleiben jetzt vollständig in
+  ihrer Box.
+
 ## [2.4.1] – Rundenende-Fix – 2026-10-12
 
 ### Behoben
