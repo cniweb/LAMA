@@ -409,6 +409,13 @@ export function playCard(state: GameState, playerId: string, card: CardValue): G
     throw new Error('Kein Durchgang aktiv.');
   }
 
+  // Hat ein Spieler die letzte Karte abgelegt, ist die Runde für alle beendet;
+  // es wird nur noch auf die Bonus-Chip-Abgabe des Finishers gewartet. Kein
+  // weiterer Zug (kein nachträgliches Solo-Weiterspielen) ist dann erlaubt.
+  if (state.pendingChipDiscardPlayerId !== null) {
+    throw new Error('Die Runde ist beendet. Es wird auf die Bonus-Chip-Abgabe gewartet.');
+  }
+
   const currentTurnPlayerId = state.playerOrder[state.turnIndex];
   if (currentTurnPlayerId !== playerId) {
     throw new Error('Du bist nicht an der Reihe.');
@@ -589,6 +596,11 @@ export function drawCard(state: GameState, playerId: string): GameState {
     throw new Error('Kein Durchgang aktiv.');
   }
 
+  // Runde durch Leerspielen beendet -> nur noch Bonus-Chip-Abgabe, kein Ziehen.
+  if (state.pendingChipDiscardPlayerId !== null) {
+    throw new Error('Die Runde ist beendet. Es wird auf die Bonus-Chip-Abgabe gewartet.');
+  }
+
   const currentTurnPlayerId = state.playerOrder[state.turnIndex];
   if (currentTurnPlayerId !== playerId) {
     throw new Error('Du bist nicht an der Reihe.');
@@ -634,6 +646,11 @@ export function drawCard(state: GameState, playerId: string): GameState {
 export function foldPlayer(state: GameState, playerId: string): GameState {
   if (state.phase !== 'IN_ROUND') {
     throw new Error('Kein Durchgang aktiv.');
+  }
+
+  // Runde durch Leerspielen beendet -> nur noch Bonus-Chip-Abgabe, kein Aussteigen.
+  if (state.pendingChipDiscardPlayerId !== null) {
+    throw new Error('Die Runde ist beendet. Es wird auf die Bonus-Chip-Abgabe gewartet.');
   }
 
   const currentTurnPlayerId = state.playerOrder[state.turnIndex];
@@ -1081,7 +1098,11 @@ export function filterStateForClient(state: GameState, viewerSessionId: string):
   };
 
   const currentTurnPlayerId = migrated.playerOrder[migrated.turnIndex];
-  const isMyTurn = migrated.phase === 'IN_ROUND' && currentTurnPlayerId === viewerSessionId;
+  // Während der Bonus-Chip-Abgabe (Runde faktisch beendet) ist niemand "am Zug":
+  // keine Lege-/Zieh-/Aussteige-Aktionen mehr, konsistent zum Engine-Guard.
+  const awaitingBonusChip = migrated.pendingChipDiscardPlayerId !== null;
+  const isMyTurn =
+    migrated.phase === 'IN_ROUND' && !awaitingBonusChip && currentTurnPlayerId === viewerSessionId;
   const topDiscardCard =
     migrated.discardPile.length > 0 ? migrated.discardPile[migrated.discardPile.length - 1] : null;
 
