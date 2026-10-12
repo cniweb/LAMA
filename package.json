@@ -19,7 +19,7 @@
     "dev:worker": "npm run dev --workspace=worker"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.14",
+    "@biomejs/biome": "^2.5.15",
     "typescript": "^7.0.2"
   },
   "allowScripts": {
