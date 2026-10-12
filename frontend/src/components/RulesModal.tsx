@@ -12,6 +12,9 @@ interface RulesModalProps {
 export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant = 'classic' }) => {
   const dialogRef = useModalDialog<HTMLDivElement>(isOpen, onClose);
   const isParty = variant === 'party';
+  const isCrazy = variant === 'crazy';
+  // Party & Crazy teilen Pluskarten, pinkes Lama und 20er-Chips.
+  const hasPartyBase = isParty || isCrazy;
 
   if (!isOpen) return null;
 
@@ -41,18 +44,22 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
           </h2>
           <span
             className={`ml-1 text-xs px-2 py-0.5 rounded-full font-bold border ${
-              isParty
-                ? 'bg-pink-500/20 border-pink-400/50 text-pink-300'
-                : 'bg-slate-800 border-slate-600 text-slate-300'
+              isCrazy
+                ? 'bg-amber-400/20 border-yellow-500/50 text-yellow-300'
+                : isParty
+                  ? 'bg-pink-500/20 border-pink-400/50 text-pink-300'
+                  : 'bg-slate-800 border-slate-600 text-slate-300'
             }`}
           >
-            {isParty ? '🎉 Party' : '🦙 Klassik'}
+            {isCrazy ? '🦙✨ Crazy' : isParty ? '🎉 Party' : '🦙 Klassik'}
           </span>
         </div>
         <p className="text-[11px] font-bold tracking-wider uppercase text-slate-500 mb-4">
-          {isParty
-            ? 'Party Edition – Pluskarten, pinkes Lama & 20er-Chips'
-            : 'Klassik – 1–6 & Lama'}
+          {isCrazy
+            ? 'Crazy Edition – goldenes Lama & Aktionskarten'
+            : isParty
+              ? 'Party Edition – Pluskarten, pinkes Lama & 20er-Chips'
+              : 'Klassik – 1–6 & Lama'}
         </p>
 
         <div className="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
@@ -68,9 +75,23 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
 
           <section>
             <h3 className="font-extrabold text-slate-100 text-sm sm:text-base mb-1">
-              🎴 Spiel-Utensilien ({isParty ? 'Party' : 'Klassik'})
+              🎴 Spiel-Utensilien ({isCrazy ? 'Crazy' : isParty ? 'Party' : 'Klassik'})
             </h3>
-            {isParty ? (
+            {isCrazy ? (
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  <strong>63 Karten:</strong> je 7× 1–6, 6× Pluskarten (`1+`–`6+`), 7× Lama, 1×{' '}
+                  <strong className="text-pink-300">pinkes Lama</strong>, 1×{' '}
+                  <strong className="text-yellow-300">goldenes Lama</strong>, je 2× Skip, Zieh 2 &
+                  Gift.
+                </li>
+                <li>
+                  <strong>Chips:</strong> weiß 1, schwarz 10,{' '}
+                  <strong className="text-pink-300">pink 20</strong> (Tausch: 10 weiß → schwarz, 2
+                  schwarz → pink).
+                </li>
+              </ul>
+            ) : isParty ? (
               <ul className="list-disc pl-5 space-y-1">
                 <li>
                   <strong>56 Karten:</strong> je 7× 1–6, 6× Pluskarten (`1+`–`6+`), 7× Lama, 1×{' '}
@@ -107,15 +128,27 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
                 <em>Sonderfälle:</em> Auf eine <strong>6</strong> darf eine 6 oder ein{' '}
                 <strong>Lama</strong> gelegt werden. Auf ein <strong>Lama</strong> darf ein Lama
                 oder eine <strong>1</strong> gelegt werden.
-                {isParty && (
+                {hasPartyBase && (
                   <>
                     {' '}
                     <br />
-                    <em>Party:</em> <strong className="text-pink-300">Pinkes Lama (PL)</strong>{' '}
-                    passt als Joker <strong>auf jede Karte</strong>. Auf PL darf nur{' '}
-                    <strong>Lama</strong> oder <strong>1</strong> (auch `1+` zählt als 1) gelegt
-                    werden. <strong>Pluskarte</strong> (`3+`) wird wie ihre Zahl gelegt und gibt
-                    sofort einen <strong>Extra-Zug</strong>.
+                    <em>{isCrazy ? 'Party-Mix:' : 'Party:'}</em>{' '}
+                    <strong className="text-pink-300">Pinkes Lama (PL)</strong> passt als Joker{' '}
+                    <strong>auf jede Karte</strong>. Auf PL darf nur <strong>Lama</strong> oder{' '}
+                    <strong>1</strong> (auch `1+` zählt als 1) gelegt werden.{' '}
+                    <strong>Pluskarte</strong> (`3+`) wird wie ihre Zahl gelegt und gibt sofort
+                    einen <strong>Extra-Zug</strong>.
+                  </>
+                )}
+                {isCrazy && (
+                  <>
+                    {' '}
+                    <br />
+                    <em>Crazy:</em> <strong className="text-yellow-300">Goldenes Lama (GL)</strong>{' '}
+                    passt als Joker auf jede Karte; danach startet der Ablagestapel frei neu
+                    (beliebige Folgekarte). Die Aktionskarten <strong>Skip</strong>,{' '}
+                    <strong>Zieh 2</strong> und <strong>Gift</strong> sind ebenfalls immer legbar
+                    und erlauben als oberste Karte eine beliebige Folgekarte.
                   </>
                 )}
               </li>
@@ -138,7 +171,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
               Sind alle anderen Mitspieler ausgestiegen, spielst du alleine weiter. Du darfst jedoch{' '}
               <strong>nicht mehr nachziehen</strong>, sondern nur noch ablegen, solange du kannst
               und willst!
-              {isParty && ' Im Party-Solo zählt jeder Kartenwert-plus nur einmal (PL als Lama).'}
+              {hasPartyBase && ' Im Solo zählt jeder Kartenwert-plus nur einmal (PL/GL als Lama).'}
+              {isCrazy && ' Draw-Two verpufft im Solo (kein Mitspieler zum Ziehen).'}
             </p>
           </section>
 
@@ -150,11 +184,18 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
               Jeder Kartenwert zählt nur <strong>einmal</strong> als Minuspunkte:
               <br />
               Drei 4er = 4 Minuspunkte. Lamas zählen 10 Minuspunkte.
-              {isParty && (
+              {hasPartyBase && (
                 <>
                   {' '}
                   Pinkes Lama dabei = <strong className="text-pink-300">20</strong> für alle Lamas.
                   Pluskarten zählen als ihr Basiswert (`3+` → 3).
+                </>
+              )}
+              {isCrazy && (
+                <>
+                  {' '}
+                  Goldenes Lama = <strong className="text-yellow-300">30</strong> (höchste
+                  Lama-Stufe gewinnt: GL 30 &gt; PL 20 &gt; L 10). Skip, Zieh 2 & Gift zählen 0.
                 </>
               )}
             </p>
@@ -166,7 +207,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
             </h3>
             <p>
               Wer alle Karten abgelegt hat, darf einen beliebigen Chip
-              {isParty ? ' (auch pinken 20er!)' : ' (auch schwarzen 10er!)'} abgeben. Erreicht
+              {hasPartyBase ? ' (auch pinken 20er!)' : ' (auch schwarzen 10er!)'} abgeben. Erreicht
               jemand <strong>40 Minuspunkte</strong>, endet das Spiel und wer am wenigsten Punkte
               hat, gewinnt!
             </p>
@@ -194,6 +235,38 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
                 <li>
                   <strong>Chips:</strong> zusätzlich pinke <strong>20er</strong>. Tausch: 10× weiß →
                   schwarz, 2× schwarz → pink. Bonus bei leerer Hand: 1er, 10er oder 20er abgeben.
+                </li>
+              </ul>
+            </section>
+          )}
+
+          {isCrazy && (
+            <section>
+              <h3 className="font-extrabold text-yellow-300 text-sm sm:text-base mb-1">
+                🦙✨ Crazy Edition: goldenes Lama & Aktionskarten
+              </h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  <strong className="text-yellow-300">Goldenes Lama (GL):</strong> Joker auf jede
+                  Karte. Als oberste Karte <strong>Reset</strong> – die nächste Karte darf beliebig
+                  sein. In der Wertung <strong>30 Minuspunkte</strong>; innerhalb der Lama-Gruppe
+                  zählt nur die höchste Stufe (GL 30 &gt; PL 20 &gt; L 10, nur einmal).
+                </li>
+                <li>
+                  <strong>Skip:</strong> der nächste aktive Spieler wird übersprungen.
+                </li>
+                <li>
+                  <strong>Zieh 2 (Draw-Two):</strong> der nächste aktive Spieler zieht bis zu 2
+                  Karten (so viele wie möglich) und setzt aus. Im Solo verpufft die Aktion.
+                </li>
+                <li>
+                  <strong>Gift:</strong> deine höchste Handkarte geht automatisch an den aktiven
+                  Spieler mit den wenigsten Karten.
+                </li>
+                <li>
+                  Alle drei Aktionskarten sind <strong>immer legbar</strong>, zählen{' '}
+                  <strong>0 Minuspunkte</strong> und erlauben als oberste Karte eine beliebige
+                  Folgekarte. Pluskarten, pinkes Lama und 20er-Chips wie in der Party Edition.
                 </li>
               </ul>
             </section>

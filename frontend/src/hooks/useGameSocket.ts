@@ -3,6 +3,7 @@ import type {
   ChipType,
   ClientMessage,
   ClientRoomView,
+  GameVariant,
   ServerMessage,
 } from '@lama/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -34,7 +35,7 @@ export function savePlayerName(name: string): void {
 export function useGameSocket(
   roomCode: string | null,
   playerName: string,
-  variant: 'classic' | 'party' = 'classic'
+  variant: GameVariant = 'classic'
 ) {
   const [state, setState] = useState<ClientRoomView | null>(null);
   const [isConnected, setIsConnected] = useState(false);

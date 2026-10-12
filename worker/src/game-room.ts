@@ -341,8 +341,9 @@ export class GameRoom extends DurableObject<Env> {
       serverWs.serializeAttachment({ sessionId, playerName });
 
       // Load or initialize room state (Variante fix bei Erstellung)
+      const variantParam = url.searchParams.get('variant');
       const requestedVariant: GameVariant =
-        url.searchParams.get('variant') === 'party' ? 'party' : 'classic';
+        variantParam === 'party' ? 'party' : variantParam === 'crazy' ? 'crazy' : 'classic';
       const state = await this.loadState(roomCode, sessionId, requestedVariant);
 
       // Add/Re-add player to room state

@@ -1,8 +1,11 @@
-export type GameVariant = 'classic' | 'party';
+export type GameVariant = 'classic' | 'party' | 'crazy';
 
 export type BaseCardValue = 1 | 2 | 3 | 4 | 5 | 6 | 'L';
 export type PlusCardValue = '1+' | '2+' | '3+' | '4+' | '5+' | '6+';
-export type CardValue = BaseCardValue | PlusCardValue | 'PL';
+/** Crazy Edition: zahllose Aktionskarten (Skip, Draw-Two, Gift). */
+export type ActionCardValue = 'SK' | 'D2' | 'GF';
+/** Crazy Edition: goldenes Lama (`GL`) als Joker + Reset + 30-Punkte-Strafkarte. */
+export type CardValue = BaseCardValue | PlusCardValue | 'PL' | 'GL' | ActionCardValue;
 
 export type ChipType = 'white' | 'black' | 'pink';
 
