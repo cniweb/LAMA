@@ -43,6 +43,11 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
 3. **Session-Resilienz:**
    * Spieler-Identifikation erfolgt über eine vom Client erzeugte `sessionId` (im `localStorage`).
    * Verbindungsabbrüche führen zu Status `DISCONNECTED`. Bei Reconnect wird der bestehende Spieler-Slot wiederbelebt.
+4. **Responsive Design ist Pflicht (Mobile + Desktop):**
+   * Jeder Frontend-/Design-Fix UND jedes neue Feature MUSS für **Mobile und Desktop** funktionieren und geprüft werden – nicht nur für eine Breite.
+   * Verbindliche Prüfbreiten: mindestens **320px** (Ultra-schmal), **390px** (Mobile) und **1280px** (Desktop). Kein horizontaler Overflow, kein Abschneiden, keine springenden/variablen Elementhöhen zwischen Zuständen.
+   * Mobile-First mit Tailwind-Breakpoints (`sm:` etc.); Touch-Ziele ≥ 44px. UI-Elemente, die je nach Zustand erscheinen/verschwinden (Buttons, Badges), dürfen die Layout-Höhe nicht springen lassen – feste Höhe statt inhaltsgetriebenem Wachstum (siehe §6.23).
+   * Verifikation: UI-Änderungen mit Playwright gegen den gebauten Stack auf mehreren Viewports prüfen (Höhe/Overflow messen + Screenshot ansehen), siehe §6.21/§6.23. Reine Code-Review genügt für UI NICHT.
 
 ---
 
@@ -205,3 +210,9 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
 ### 6.22 Terminal-Fallstrick: mehrzeilige git/gh-Texte
 * **Stolperstein:** `git commit -m "zeile1\nzeile2"` mit echten Zeilenumbrüchen bzw. `gh pr create --body "…langer mehrzeiliger Text…"` wurden in dieser Umgebung abgeschnitten (Tool-Exit -1, Commit/PR kam nicht zustande), obwohl die Syntax gültig ist.
 * **Lösung:** Commit-Message einzeilig halten (ein `-m`), ausführlichen Kontext in die **PR-Beschreibung** legen – und diese über `gh pr create --body-file <datei>` statt `--body "…"` übergeben (temporäre Markdown-Datei schreiben, danach löschen). Nach `-1`-Abbrüchen immer den tatsächlichen Zustand prüfen (`git log -1`, `gh pr list --head <branch>`), nicht blind erneut committen/pushen.
+
+### 6.23 Konstante Höhe der Spieler-Steuerzeile (PlayerHand)
+* **Stolperstein:** Die Steuerzeile unter der Hand (Chips + Aktionen) war mal ein-, mal zweizeilig. Ursachen: `flex-col` stapelte auf Mobile Chips- und Aktionsblock untereinander; die Kinder hatten uneinheitliche Höhen (Buttons `min-h-[44px]` vs. kleine Status-Texte); beim Erscheinen der Tausch-Buttons (`10→1`, `2×10→20`) wuchs die Zeile und sprang.
+* **Lösung:** Container mit **fester** Höhe `h-[60px]` (nicht nur `min-h`, sonst treibt der Inhalt die Höhe über die Vorgabe – gemessen: Buttons `h-11`=44px + `py-2`=16px = 60px), immer `flex-row` + `items-center justify-between`. Alle interaktiven Elemente und Status-Texte teilen `h-11` und sind vertikal zentriert. Statt vertikalem Umbruch `overflow-x-auto overflow-y-hidden` + `whitespace-nowrap`: bei Extrembreiten horizontaler Scroll statt Höhenänderung/Clipping. `data-testid="controls-bar"` zum Messen ergänzt.
+* **Verifikationsmethode (wiederverwendbar für Höhen-/Overflow-Bugs):** Temporärer Playwright-Spec, der die `boundingBox().height` des Elements über mehrere Viewports (390px/1280px) und Zustände (am Zug / wartend / mit injizierten Zusatz-Buttons) vergleicht und `scrollHeight <= clientHeight` prüft (kein vertikaler Überlauf). Ergebnis muss in allen Fällen identisch sein (hier: konstant 60). Spec + Screenshots danach löschen, nicht committen.
+* **Leitplanke (Responsive, siehe §3.4):** `min-h` fixiert eine Mindest-, keine Maximalhöhe – für „springt nicht" braucht es eine feste Höhe ODER eine `min-h`, die ≥ der maximal möglichen Inhaltshöhe liegt. Immer den Zustand mit den MEISTEN sichtbaren Elementen gegen den mit den WENIGSTEN messen.

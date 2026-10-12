@@ -6,6 +6,18 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.4.3] – Steuerzeile mit konstanter Höhe – 2026-10-12
+
+### Behoben
+- **Steuerzeile sprang in der Höhe:** Die Zeile mit Chips und Aktionen unter der
+  Hand war je nach Zustand mal ein-, mal zweizeilig – besonders wenn die
+  Chip-Tausch-Buttons erschienen, wuchs sie und wirkte unruhig. Sie hat jetzt eine
+  **konstante Höhe** (responsive für Mobile und Desktop), unabhängig davon, ob der
+  Spieler am Zug ist oder Tausch-Optionen sichtbar sind: feste Höhe statt
+  inhaltsgetriebenem Wachstum, einheitliche Button-/Element-Höhen und horizontaler
+  Scroll statt Umbruch bei Extrembreiten (kein Abschneiden). Geprüft auf 390px und
+  1280px.
+
 ## [2.4.2] – Abrechnungs-Darstellung – 2026-10-12
 
 ### Behoben
