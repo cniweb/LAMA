@@ -184,9 +184,7 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
                   {score.cards.length === 0 ? (
                     <span className="text-xs font-bold text-emerald-400">0 Karten (0 Pkt.)</span>
                   ) : (
-                    score.cards.map((c, i) => (
-                      <Card key={i} value={c} size="sm" className="!w-7 !h-10 !text-xs !p-0.5" />
-                    ))
+                    score.cards.map((c, i) => <Card key={i} value={c} size="xxs" />)
                   )}
                 </div>
               </div>
