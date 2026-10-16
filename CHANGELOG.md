@@ -6,6 +6,20 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.4.4] – Mobile-Chip-Tausch klickbar – 2026-10-16
+
+### Behoben
+- **Chip-Tausch-Button auf Mobile nicht klickbar:** Durch den Fix für die
+  konstante Höhe der Steuerzeile (v2.4.3) lag der horizontale Scroll auf dem
+  äußeren Container, während der rechte Status-Block (`shrink-0`) per
+  `justify-between` an den Rand gezogen wurde. Auf schmalen Mobilbreiten
+  (360–390px) wurde der linke Block mit den Tausch-Buttons (`min-w-0`) dadurch
+  so komprimiert, dass die Buttons in den Bereich des Status-Blocks gedrängt und
+  nicht mehr erreichbar/klickbar waren. Der horizontale Scroll liegt nun auf dem
+  linken Block selbst (`flex-1 overflow-x-auto`), sodass Tausch-Buttons und
+  Status-Block disjunkte Bereiche haben und die Buttons wieder voll klickbar
+  sind. Die konstante Zeilenhöhe (`h-[60px]`) bleibt erhalten.
+
 ## [2.4.3] – Steuerzeile mit konstanter Höhe – 2026-10-12
 
 ### Behoben

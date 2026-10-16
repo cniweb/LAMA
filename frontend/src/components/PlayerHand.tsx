@@ -52,9 +52,9 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           Alle interaktiven Elemente teilen die gleiche Höhe (h-11 = 44px Touch). */}
       <div
         data-testid="controls-bar"
-        className="flex flex-row items-center justify-between gap-2 sm:gap-3 w-full max-w-2xl h-[60px] px-3 sm:px-4 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm overflow-x-auto overflow-y-hidden"
+        className="flex flex-row items-center justify-between gap-2 sm:gap-3 w-full max-w-2xl h-[60px] px-3 sm:px-4 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm"
       >
-        <div className="flex items-center gap-x-2 gap-y-0 min-w-0">
+        <div className="flex items-center gap-x-2 gap-y-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
           <span className="text-xs sm:text-sm font-extrabold text-slate-300 whitespace-nowrap">
             Deine Chips:
           </span>
