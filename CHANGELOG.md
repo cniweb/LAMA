@@ -6,6 +6,8 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.4.4] – Mobile-Chip-Tausch klickbar – 2026-10-16
+
 ### Behoben
 - **Chip-Tausch-Button auf Mobile nicht klickbar:** Durch den Fix für die
   konstante Höhe der Steuerzeile (v2.4.3) lag der horizontale Scroll auf dem
