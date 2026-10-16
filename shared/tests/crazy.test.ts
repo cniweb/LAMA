@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CRAZY_ACTION_COPIES, createDeck } from '../src/deck.js';
+import { CRAZY_ACTION_COPIES, CRAZY_DRAW_TWO_COPIES, createDeck } from '../src/deck.js';
 import {
   addPlayerToRoom,
   calculateUniquePoints,
@@ -29,9 +29,9 @@ function setupCrazyRound(playerIds: string[] = ['p1', 'p2']): ReturnType<typeof 
 }
 
 describe('Crazy Edition – Deck', () => {
-  it('erzeugt 63 Karten: Party-Basis + 1x GL + je 2x SK/D2/GF', () => {
+  it('erzeugt 65 Karten: Party-Basis + 1x GL + 2x SK + 4x D2 + 2x GF', () => {
     const deck = createDeck('crazy');
-    expect(deck.length).toBe(63);
+    expect(deck.length).toBe(65);
     for (let v = 1; v <= 6; v++) {
       expect(deck.filter((c) => c === v).length).toBe(7);
     }
@@ -40,7 +40,7 @@ describe('Crazy Edition – Deck', () => {
     expect(deck.filter((c) => c === 'PL').length).toBe(1);
     expect(deck.filter((c) => c === 'GL').length).toBe(1);
     expect(deck.filter((c) => c === 'SK').length).toBe(CRAZY_ACTION_COPIES);
-    expect(deck.filter((c) => c === 'D2').length).toBe(CRAZY_ACTION_COPIES);
+    expect(deck.filter((c) => c === 'D2').length).toBe(CRAZY_DRAW_TWO_COPIES);
     expect(deck.filter((c) => c === 'GF').length).toBe(CRAZY_ACTION_COPIES);
   });
 

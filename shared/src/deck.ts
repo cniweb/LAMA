@@ -8,8 +8,10 @@ export const TOTAL_CARDS = 56;
 export const PARTY_BASE_COPIES = 7;
 export const PARTY_LLAMA_COPIES = 7;
 
-/** Crazy Edition: Party-Basis + 1x goldenes Lama + je 2x Skip/Draw-Two/Gift. */
+/** Crazy Edition: Party-Basis + 1x goldenes Lama + Skip/Gift je 2x, Draw-Two 4x. */
 export const CRAZY_ACTION_COPIES = 2;
+/** Draw-Two kommt häufiger vor als die übrigen Aktionskarten. */
+export const CRAZY_DRAW_TWO_COPIES = 4;
 
 /** Baut die Party-Basis (7x 1-6, 6 Pluskarten, 7x Lama, 1x pinkes Lama). */
 function createPartyBaseDeck(): CardValue[] {
@@ -34,12 +36,16 @@ export function createDeck(variant: GameVariant = 'classic'): CardValue[] {
     return createPartyBaseDeck();
   }
   if (variant === 'crazy') {
-    // Party-Basis (56) + 1x goldenes Lama + je 2x Skip/Draw-Two/Gift = 63 Karten.
+    // Party-Basis (56) + 1x goldenes Lama + 2x Skip + 4x Draw-Two + 2x Gift = 65 Karten.
     const deck = createPartyBaseDeck();
     deck.push('GL');
-    const actionCards: CardValue[] = ['SK', 'D2', 'GF'];
-    for (const action of actionCards) {
-      for (let i = 0; i < CRAZY_ACTION_COPIES; i++) {
+    const actionCards: [CardValue, number][] = [
+      ['SK', CRAZY_ACTION_COPIES],
+      ['D2', CRAZY_DRAW_TWO_COPIES],
+      ['GF', CRAZY_ACTION_COPIES],
+    ];
+    for (const [action, copies] of actionCards) {
+      for (let i = 0; i < copies; i++) {
         deck.push(action);
       }
     }
