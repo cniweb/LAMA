@@ -30,7 +30,7 @@ Versuche, deine Handkarten so schnell wie möglich loszuwerden. Denn jede Karte,
 > * Zusätzlich **pinke 20er-Chips** (Tausch: 2× schwarz → pink). Bonus bei leerer Hand: 1er, 10er oder 20er abgeben.
 
 > **🦙✨ Crazy Edition (wählbar beim Erstellen des Raumes):**
-> * **63 Karten:** die komplette Party-Basis (7x 1–6, 6 Pluskarten, 7x Lama, 1x pinkes Lama) **plus** 1x **goldenes Lama** und je 2x **Skip**, **Zieh 2** und **Gift**.
+> * **65 Karten:** die komplette Party-Basis (7x 1–6, 6 Pluskarten, 7x Lama, 1x pinkes Lama) **plus** 1x **goldenes Lama**, 2x **Skip**, 4x **Zieh 2** und 2x **Gift**.
 > * **Goldenes Lama (GL):** Joker – passt auf jede Karte. Als oberste Karte ist es ein **Reset**: Die nächste Karte darf beliebig sein. In der Wertung zählt es **30 Minuspunkte**; innerhalb der Lama-Gruppe zählt nur die höchste Stufe (GL 30 > pinkes Lama 20 > Lama 10, jeweils nur einmal).
 > * **Skip:** Der nächste aktive Spieler wird übersprungen.
 > * **Zieh 2 (Draw-Two):** Der nächste aktive Spieler zieht bis zu 2 Karten (so viele wie möglich) und setzt aus. Im Solo-Endspurt verpufft die Aktion.

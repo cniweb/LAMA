@@ -6,6 +6,17 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.5.0] – Crazy: mehr „Zieh 2“ – 2026-10-16
+
+### Geändert
+- **Crazy Edition – häufigere „Zieh 2“-Karte:** Die Draw-Two-Karte (`D2`) kommt
+  im Crazy-Deck jetzt **4× statt 2×** vor, damit die Aktion öfter auftritt. Das
+  Deck wächst dadurch von 63 auf **65 Karten** (Party-Basis + 1× `GL` + 2× `SK`
+  + 4× `D2` + 2× `GF`). Skip (`SK`) und Gift (`GF`) bleiben unverändert bei je 2×.
+  Die Spiellogik der Karte (Zugwechsel, Best-Effort-Ziehen, Verpuffen im
+  Solo-Endspurt) ist unverändert – es ändert sich nur die Häufigkeit im Stapel.
+  Abgesichert durch angepasste Unit-Tests (`shared/tests/crazy.test.ts`).
+
 ## [2.4.4] – Mobile-Chip-Tausch klickbar – 2026-10-16
 
 ### Behoben
