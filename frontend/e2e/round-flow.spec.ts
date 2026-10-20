@@ -191,26 +191,40 @@ test('kompletter Spielablauf: Lobby, Runde, Rundenende und Punkteabrechnung', as
     log('Abrechnungs-Header geprüft');
 
     // Chip-Rückgabe, falls jemand alle Karten abgelegt hat (Bonus-Flow).
-    // Der Dialog erscheint nur auf der Seite des Spielers, der leer gespielt
-    // hat und noch Chips besitzt.
+    // Der berechtigte Spieler bestätigt zuerst den nächsten Durchgang. Die
+    // Abrechnung bleibt bis zur Chip-Rückgabe und der zweiten Bestätigung offen.
     let bonusReturned = 0;
+    let bonusPage: Page | null = null;
+    let bonusButton: Locator | null = null;
     for (const [page, name] of [
       [alice, 'Alice'],
       [bob, 'Bob'],
     ] as const) {
       const modal = page.getByTestId('round-summary');
-      if (await modal.getByTestId('discard-black-chip').isVisible()) {
-        await modal.getByTestId('discard-black-chip').click({ timeout: 15_000 });
-        bonusReturned = 10;
-        log(`${name} gibt schwarzen Chip zurück (-10)`);
-        break;
+      for (const [chipTestId, points] of [
+        ['discard-black-chip', 10],
+        ['discard-white-chip', 1],
+      ] as const) {
+        const chipButton = modal.getByTestId(chipTestId);
+        if (await chipButton.isVisible()) {
+          bonusPage = page;
+          bonusButton = chipButton;
+          bonusReturned = points;
+          await modal.getByTestId('next-round-button').click({ timeout: 15_000 });
+          await expect(modal.getByTestId('next-round-waiting')).toBeVisible();
+          const otherPage = page === alice ? bob : alice;
+          await expect(otherPage.getByTestId('round-summary')).toBeVisible();
+          await expect(otherPage.getByTestId('next-round-button')).toBeVisible();
+          for (const currentPage of [alice, bob]) {
+            await expect(currentPage.getByTestId('new-game-button')).toBeVisible();
+            await expect(currentPage.getByTestId('leave-room-button')).toBeVisible();
+          }
+          await chipButton.click({ timeout: 15_000 });
+          log(`${name} bestätigt den Durchgang und gibt einen Chip zurück (-${points})`);
+          break;
+        }
       }
-      if (await modal.getByTestId('discard-white-chip').isVisible()) {
-        await modal.getByTestId('discard-white-chip').click({ timeout: 15_000 });
-        bonusReturned = 1;
-        log(`${name} gibt weißen Chip zurück (-1)`);
-        break;
-      }
+      if (bonusButton) break;
     }
 
     // Punkteabrechnung prüfen: In Runde 1 starten alle bei 0 Chips, daher
@@ -232,9 +246,20 @@ test('kompletter Spielablauf: Lobby, Runde, Rundenende und Punkteabrechnung', as
     }
     log(`Abrechnung geprüft: +${gained.join('/+')} => ${totals.join('/')}, Bonus ${bonusReturned}`);
 
-    // --- Nächster Durchgang startet auf beiden Seiten mit vollen Händen ---
-    await summary.getByTestId('next-round-button').click({ timeout: 15_000 });
-    log('Nächsten Durchgang gestartet');
+    // --- Beide Spieler bestätigen den nächsten Durchgang ---
+    if (bonusPage) {
+      const otherPage = bonusPage === alice ? bob : alice;
+      await expect(otherPage.getByTestId('round-summary')).toBeVisible();
+      await otherPage.getByTestId('next-round-button').click({ timeout: 15_000 });
+    } else {
+      await summary.getByTestId('next-round-button').click({ timeout: 15_000 });
+      await expect(alice.getByTestId('next-round-waiting')).toBeVisible();
+      await expect(alice.getByTestId('round-badge')).toHaveText('Durchgang 1');
+      await expect(bob.getByTestId('round-badge')).toHaveText('Durchgang 1');
+      await expect(bob.getByTestId('round-summary')).toBeVisible();
+      await bob.getByTestId('next-round-button').click({ timeout: 15_000 });
+    }
+    log('Beide Spieler haben Durchgang 2 bestätigt');
     for (const p of [alice, bob]) {
       await expect(p.getByTestId('round-badge')).toHaveText('Durchgang 2');
       await expect(p.getByTestId('player-hand').locator('button')).toHaveCount(6);

@@ -185,6 +185,7 @@ export function createInitialGameState(
     discardPile: [],
     lastRoundFinisherId: null,
     firstRoundExiterId: null,
+    nextRoundReadyPlayerIds: [],
     soloDiscardedValues: null,
     pendingChipDiscardPlayerId: null,
     lastRoundSummary: null,
@@ -199,7 +200,12 @@ export function migrateGameState(state: GameState): GameState {
   for (const [pid, p] of Object.entries(state.players)) {
     players[pid] = { ...p, chips: normalizeChips(p.chips) };
   }
-  return { ...state, variant, players };
+  return {
+    ...state,
+    variant,
+    players,
+    nextRoundReadyPlayerIds: state.nextRoundReadyPlayerIds ?? [],
+  };
 }
 
 export function addPlayerToRoom(state: GameState, id: string, name: string): GameState {
@@ -297,11 +303,49 @@ export function startRound(state: GameState, starterPlayerId?: string): GameStat
     drawPile,
     discardPile,
     firstRoundExiterId: null,
+    nextRoundReadyPlayerIds: [],
     soloDiscardedValues: null,
     pendingChipDiscardPlayerId: null,
     lastRoundSummary: null,
     winners: null,
   };
+}
+
+function startNextRoundIfReady(state: GameState): GameState {
+  if (state.phase === 'GAME_OVER' && state.nextRoundReadyPlayerIds.length > 0) {
+    return { ...state, nextRoundReadyPlayerIds: [] };
+  }
+
+  if (
+    state.phase !== 'ROUND_SUMMARY' ||
+    state.pendingChipDiscardPlayerId ||
+    state.playerOrder.length < 2 ||
+    !state.playerOrder.every((id) => state.nextRoundReadyPlayerIds.includes(id))
+  ) {
+    return state;
+  }
+
+  return startRound(state, state.lastRoundFinisherId || undefined);
+}
+
+export function markNextRoundReady(state: GameState, playerId: string): GameState {
+  const canConfirm =
+    state.phase === 'ROUND_SUMMARY' ||
+    (state.phase === 'IN_ROUND' && state.pendingChipDiscardPlayerId !== null);
+  if (!canConfirm) {
+    throw new Error('Der nächste Durchgang kann erst nach Rundenende bestätigt werden.');
+  }
+  if (!state.players[playerId]) {
+    throw new Error('Spieler nicht gefunden.');
+  }
+  if (state.nextRoundReadyPlayerIds.includes(playerId)) {
+    return state;
+  }
+
+  return startNextRoundIfReady({
+    ...state,
+    nextRoundReadyPlayerIds: [...state.nextRoundReadyPlayerIds, playerId],
+  });
 }
 
 export function playCard(state: GameState, playerId: string, card: CardValue): GameState {
@@ -580,6 +624,7 @@ export function settleRound(
         : 'ROUND_SUMMARY',
     players: updatedPlayers,
     lastRoundFinisherId: endingPlayerId,
+    nextRoundReadyPlayerIds: [],
     soloDiscardedValues: null,
     pendingChipDiscardPlayerId,
     lastRoundSummary: roundSummary,
@@ -668,6 +713,7 @@ export function resetGameForNewMatch(state: GameState): GameState {
     discardPile: [],
     lastRoundFinisherId: null,
     firstRoundExiterId: null,
+    nextRoundReadyPlayerIds: [],
     soloDiscardedValues: null,
     pendingChipDiscardPlayerId: null,
     lastRoundSummary: null,
@@ -747,6 +793,7 @@ export function removePlayerFromGame(state: GameState, playerId: string): GameSt
     turnIndex,
     firstRoundExiterId,
     lastRoundFinisherId,
+    nextRoundReadyPlayerIds: state.nextRoundReadyPlayerIds.filter((id) => id !== playerId),
     winners,
     lastRoundSummary,
     pendingChipDiscardPlayerId:
@@ -754,13 +801,13 @@ export function removePlayerFromGame(state: GameState, playerId: string): GameSt
   };
 
   // Ausstehende Chip-Rückgabe des Entfernten verfällt -> Abrechnungsphase auflösen.
-  if (state.pendingChipDiscardPlayerId === playerId) {
+  if (state.pendingChipDiscardPlayerId === playerId && order.length >= 2) {
     const someoneReached40 = Object.values(rest).some((p) => p.totalScore >= 40);
-    return {
+    return startNextRoundIfReady({
       ...withoutPlayer,
       phase: someoneReached40 ? 'GAME_OVER' : 'ROUND_SUMMARY',
       winners: someoneReached40 ? determineWinners(rest) : null,
-    };
+    });
   }
 
   // Zu wenige Spieler für einen Durchgang -> zurück in die Lobby (Chips behalten).
@@ -784,6 +831,7 @@ export function removePlayerFromGame(state: GameState, playerId: string): GameSt
       drawPile: [],
       discardPile: [],
       firstRoundExiterId: null,
+      nextRoundReadyPlayerIds: [],
       soloDiscardedValues: null,
       pendingChipDiscardPlayerId: null,
       lastRoundSummary: null,
@@ -796,7 +844,7 @@ export function removePlayerFromGame(state: GameState, playerId: string): GameSt
     return settleRound(withoutPlayer, null, playerId);
   }
 
-  return withoutPlayer;
+  return startNextRoundIfReady(withoutPlayer);
 }
 
 export function discardBonusChip(
@@ -857,14 +905,14 @@ export function discardBonusChip(
 
   const someoneReached40 = Object.values(updatedPlayers).some((p) => p.totalScore >= 40);
 
-  return {
+  return startNextRoundIfReady({
     ...state,
     phase: someoneReached40 ? 'GAME_OVER' : 'ROUND_SUMMARY',
     players: updatedPlayers,
     pendingChipDiscardPlayerId: null,
     lastRoundSummary: updatedSummary,
     winners: someoneReached40 ? determineWinners(updatedPlayers) : null,
-  };
+  });
 }
 
 export function determineWinners(players: Record<string, Player>): string[] {
@@ -965,6 +1013,7 @@ export function filterStateForClient(state: GameState, viewerSessionId: string):
     isSoloEndspurt: solo,
     soloDiscardedValues: migrated.soloDiscardedValues,
     pendingChipDiscardPlayerId: migrated.pendingChipDiscardPlayerId,
+    nextRoundReadyPlayerIds: [...(migrated.nextRoundReadyPlayerIds ?? [])],
     lastRoundSummary: migrated.lastRoundSummary,
     winners: winnersFormatted,
   };
