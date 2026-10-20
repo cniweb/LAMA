@@ -53,6 +53,7 @@ export interface GameState {
   discardPile: CardValue[];
   lastRoundFinisherId: string | null;
   firstRoundExiterId: string | null;
+  nextRoundReadyPlayerIds: string[];
   soloDiscardedValues: CardValue[] | null;
   pendingChipDiscardPlayerId: string | null;
   lastRoundSummary: RoundPlayerScore[] | null;
@@ -96,6 +97,7 @@ export interface ClientRoomView {
   isSoloEndspurt: boolean;
   soloDiscardedValues: CardValue[] | null;
   pendingChipDiscardPlayerId: string | null;
+  nextRoundReadyPlayerIds: string[];
   lastRoundSummary: RoundPlayerScore[] | null;
   winners: { id: string; name: string; score: number }[] | null;
 }

@@ -23,6 +23,7 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
 }) => {
   const isGameOver = state.phase === 'GAME_OVER';
   const isPendingMyChipDiscard = state.pendingChipDiscardPlayerId === state.myPlayer.id;
+  const isMyNextRoundReady = state.nextRoundReadyPlayerIds.includes(state.myPlayer.id);
   // Blockierender Dialog (kein onClose): Fokus-Falle ja, Esc-Schließen nein.
   const dialogRef = useModalDialog<HTMLDivElement>(true);
 
@@ -202,39 +203,45 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
         </div>
 
         {/* Action Button */}
-        {!isGameOver && !state.pendingChipDiscardPlayerId && (
-          <button
-            type="button"
-            onClick={onNextRound}
-            data-testid="next-round-button"
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-base shadow-xl hover:scale-105 transition-all cursor-pointer"
-          >
-            <span>Nächsten Durchgang starten</span>
-            <ArrowRight className="w-5 h-5" />
-          </button>
-        )}
+        {!isGameOver &&
+          (isMyNextRoundReady ? (
+            <p data-testid="next-round-waiting" className="text-center text-emerald-300 font-bold">
+              Du bist bereit. Warte auf die anderen Spieler.
+              <span className="block text-sm text-slate-400 font-medium">
+                {state.nextRoundReadyPlayerIds.length} von {state.opponents.length + 1} bereit
+              </span>
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={onNextRound}
+              data-testid="next-round-button"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-base shadow-xl hover:scale-105 transition-all cursor-pointer"
+            >
+              <span>Nächsten Durchgang starten</span>
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          ))}
 
         {/* Neues Spiel / Raum verlassen: nach Rundenende für alle sichtbar */}
-        {(isGameOver || (!isGameOver && !state.pendingChipDiscardPlayerId)) && (
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={onNewGame}
-              data-testid="new-game-button"
-              className="px-5 py-3 min-h-[44px] rounded-2xl bg-slate-100 hover:bg-white text-slate-950 font-black text-sm shadow-xl hover:scale-105 transition-all cursor-pointer"
-            >
-              Neues Spiel
-            </button>
-            <button
-              type="button"
-              onClick={onLeaveRoom}
-              data-testid="leave-room-button"
-              className="px-5 py-3 min-h-[44px] rounded-2xl bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 font-black text-sm shadow transition-all cursor-pointer"
-            >
-              Raum verlassen
-            </button>
-          </div>
-        )}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={onNewGame}
+            data-testid="new-game-button"
+            className="px-5 py-3 min-h-[44px] rounded-2xl bg-slate-100 hover:bg-white text-slate-950 font-black text-sm shadow-xl hover:scale-105 transition-all cursor-pointer"
+          >
+            Neues Spiel
+          </button>
+          <button
+            type="button"
+            onClick={onLeaveRoom}
+            data-testid="leave-room-button"
+            className="px-5 py-3 min-h-[44px] rounded-2xl bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 font-black text-sm shadow transition-all cursor-pointer"
+          >
+            Raum verlassen
+          </button>
+        </div>
       </div>
     </div>
   );

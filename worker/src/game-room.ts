@@ -13,6 +13,7 @@ import {
   type GameVariant,
   isRoomExpired,
   MAX_MESSAGE_BYTES,
+  markNextRoundReady,
   migrateGameState,
   playCard,
   ROOM_TTL_MS,
@@ -476,11 +477,10 @@ export class GameRoom extends DurableObject<Env> {
         }
 
         case 'NEXT_ROUND': {
-          if (state.phase !== 'ROUND_SUMMARY') {
-            throw new Error('Runde noch nicht abgeschlossen.');
+          nextState = markNextRoundReady(state, sessionId);
+          if (nextState.roundNumber > state.roundNumber) {
+            this.broadcastNotification(`Durchgang ${nextState.roundNumber} gestartet!`, 'info');
           }
-          nextState = startRound(state, state.lastRoundFinisherId || undefined);
-          this.broadcastNotification(`Durchgang ${nextState.roundNumber} gestartet!`, 'info');
           break;
         }
 
@@ -490,7 +490,11 @@ export class GameRoom extends DurableObject<Env> {
         }
 
         case 'NEW_GAME': {
-          if (state.phase !== 'ROUND_SUMMARY' && state.phase !== 'GAME_OVER') {
+          if (
+            state.phase !== 'ROUND_SUMMARY' &&
+            state.phase !== 'GAME_OVER' &&
+            state.pendingChipDiscardPlayerId === null
+          ) {
             throw new Error('Neues Spiel erst nach Rundenende möglich.');
           }
           // Bewusst kein Host-Check: Button sehen/auslösen dürfen alle.
@@ -517,11 +521,14 @@ export class GameRoom extends DurableObject<Env> {
             return;
           }
           const left = afterRemoval.playerOrder.length !== beforeLen;
-          // Punkte und Durchgänge für alle Verbleibenden resetten (faire Basis)
-          nextState = resetGameForNewMatch(afterRemoval);
+          const keepRoundSummary =
+            state.phase === 'ROUND_SUMMARY' || state.pendingChipDiscardPlayerId !== null;
+          nextState = keepRoundSummary ? afterRemoval : resetGameForNewMatch(afterRemoval);
           if (left) {
             this.broadcastNotification(
-              `${leaverName} hat den Raum verlassen. Punkte wurden zurückgesetzt.`,
+              keepRoundSummary
+                ? `${leaverName} hat den Raum verlassen.`
+                : `${leaverName} hat den Raum verlassen. Punkte wurden zurückgesetzt.`,
               'info'
             );
           }
