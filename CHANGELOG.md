@@ -6,6 +6,17 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.5.1] – Rundenbereitschaft & Worker-Beobachtbarkeit – 2026-10-20
+
+### Hinzugefügt
+- **Synchronisierter Start des nächsten Durchgangs:** Alle im Raum verbliebenen
+  Spieler bestätigen den Neustart, bevor eine neue Runde beginnt. Während des
+  Wartens bleiben Abrechnung, „Neues Spiel“ und „Raum verlassen“ verfügbar; eine
+  ausstehende Bonus-Chip-Rückgabe wird vor dem Rundenstart abgeschlossen.
+- **Cloudflare Worker Observability:** Persistierte Invocation-Logs und Issues
+  sind aktiviert. Query-Strings werden in Logs und Traces redigiert; Tracing
+  bleibt deaktiviert.
+
 ## [2.5.0] – Crazy: mehr „Zieh 2“ – 2026-10-16
 
 ### Geändert
