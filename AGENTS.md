@@ -37,13 +37,18 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
    * Jede Änderung an den Spielregeln muss durch automatisierte Unit-Tests in `shared/tests/` abgesichert sein.
    * Test-Framework: Vitest.
    * Alle Sonderregeln (Solo-Endspurt, Lama auf 6, 1 auf Lama, Einmaligkeitsprinzip bei Minuspunkten, Chip-Rückgabe) müssen getestet sein.
-2. **TypeScript Strict Mode:**
+2. **Test-Driven Development für Bugfixes und Verhalten:**
+   * Vor Produktionscode zuerst einen fokussierten Test schreiben, der das gewünschte Verhalten beschreibt und mit der bisherigen Implementierung fehlschlägt (RED).
+   * Den Test ausführen und prüfen, dass er aus dem erwarteten fachlichen Grund fehlschlägt – nicht wegen eines Test- oder Setup-Fehlers.
+   * Danach die kleinste passende Implementierung schreiben (GREEN), den fokussierten Test erneut ausführen und anschließend die relevante Gesamtsuite laufen lassen.
+   * Bestehende Tests nach bestandenem GREEN gezielt refaktorieren (REFACTOR); keine Implementierung vor dem reproduzierenden Test.
+3. **TypeScript Strict Mode:**
    * Keine `any`-Casts ohne zwingende Begründung.
    * Shared Types in `shared/src/types.ts` sind die Single Source of Truth für Frontend und Backend.
-3. **Session-Resilienz:**
+4. **Session-Resilienz:**
    * Spieler-Identifikation erfolgt über eine vom Client erzeugte `sessionId` (im `localStorage`).
    * Verbindungsabbrüche führen zu Status `DISCONNECTED`. Bei Reconnect wird der bestehende Spieler-Slot wiederbelebt.
-4. **Responsive Design ist Pflicht (Mobile + Desktop):**
+5. **Responsive Design ist Pflicht (Mobile + Desktop):**
    * Jeder Frontend-/Design-Fix UND jedes neue Feature MUSS für **Mobile und Desktop** funktionieren und geprüft werden – nicht nur für eine Breite.
    * Verbindliche Prüfbreiten: mindestens **320px** (Ultra-schmal), **390px** (Mobile) und **1280px** (Desktop). Kein horizontaler Overflow, kein Abschneiden, keine springenden/variablen Elementhöhen zwischen Zuständen.
    * Mobile-First mit Tailwind-Breakpoints (`sm:` etc.); Touch-Ziele ≥ 44px. UI-Elemente, die je nach Zustand erscheinen/verschwinden (Buttons, Badges), dürfen die Layout-Höhe nicht springen lassen – feste Höhe statt inhaltsgetriebenem Wachstum (siehe §6.23).
@@ -221,3 +226,8 @@ LAMA ist ein webbasiertes Echtzeit-Kartenspiel (2–6 Spieler) im Monorepo-Desig
 * **Stolperstein:** Der Konstante-Höhe-Fix (§6.23) legte `overflow-x-auto` auf den **äußeren** `controls-bar`-Container und zog den rechten Status-Block per `justify-between` + `shrink-0` an den Rand. Der linke Block (Chips + Tausch-Buttons) hatte nur `min-w-0` ohne eigenen Scroll-Kontext. Auf schmalen Mobilbreiten (360–390px) wurde der linke Block komprimiert, seine `shrink-0`-Tausch-Buttons (`10→1`, `2×10→20`) überlappten mit dem Status-Block und waren nicht mehr klickbar (am Rundenende der häufigste Chip-Tausch-Moment).
 * **Lösung:** Horizontalen Scroll vom äußeren Container auf den **linken Block** verlagern: `flex-1 min-w-0 overflow-x-auto overflow-y-hidden`. Dadurch belegen linker (scrollbarer) Chip-/Tausch-Block und rechter `shrink-0`-Status-Block disjunkte Bereiche – die Buttons bleiben in ihrem eigenen Scroll-Bereich voll klickbar. Feste Höhe `h-[60px]` aus §6.23 bleibt unverändert erhalten.
 * **Leitplanke:** Bei `justify-between` + einem `shrink-0`-Nachbarn darf der konkurrierende Block nicht nur `min-w-0` haben – er braucht `flex-1` **und** seinen eigenen `overflow-x-auto`, sonst werden seine `shrink-0`-Kinder unter den Nachbarn geschoben. Overflow gehört auf den Block, der tatsächlich überläuft, nicht auf den gemeinsamen Eltern-Container. Interaktive Elemente, die je nach Zustand erscheinen (Tausch-Buttons), immer im Zustand mit den MEISTEN sichtbaren Nachbarn auf 360px auf Klickbarkeit (nicht nur Sichtbarkeit) prüfen.
+
+### 6.25 Selbstverbesserung durch Lessons Learned
+* **Prüfung nach einer Arbeit:** Nach einem Bugfix, Feature oder einer Untersuchung prüfen, ob neue, wiederverwendbare Erkenntnisse über Architektur, Tests, Toolchain oder Verifikation entstanden sind.
+* **Dokumentation:** Relevante Erkenntnisse zeitnah in diesem Abschnitt ergänzen oder einen bestehenden Eintrag aktualisieren. Eintrag nach Möglichkeit als Stolperstein/Ursache, Lösung und Verifikation formulieren; konkrete Befehle und betroffene Dateien nennen, wenn sie für die Wiederverwendung wichtig sind.
+* **Qualität:** Vor dem Ergänzen nach einem vorhandenen ähnlichen Eintrag suchen und diesen erweitern statt zu duplizieren. Keine einmaligen, unbestätigten Vermutungen oder Geheimnisse dokumentieren; technische Aussagen vor Aufnahme anhand von Code, Tests oder reproduzierbarem Verhalten prüfen.
