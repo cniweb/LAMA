@@ -40,6 +40,13 @@ export function App() {
 
   useTurnNotifications(state);
 
+  const exchangeAllowed =
+    state !== null &&
+    (state.myPlayer.isTurn ||
+      state.phase === 'ROUND_SUMMARY' ||
+      state.phase === 'GAME_OVER' ||
+      state.pendingChipDiscardPlayerId === state.myPlayer.id);
+
   useEffect(() => {
     if (playerName) {
       savePlayerName(playerName);
@@ -409,7 +416,7 @@ export function App() {
           <LobbyView state={state} onStartGame={actions.startGame} />
         </main>
       ) : state ? (
-        <main className="flex-1 flex flex-col justify-between p-2 sm:p-4 max-w-6xl mx-auto w-full">
+        <main className="flex-1 flex flex-col justify-between px-2 py-0 sm:p-4 max-w-6xl mx-auto w-full">
           {/* Screenreader-Ansage für Zugwechsel und Hinweise */}
           <div aria-live="polite" role="status" className="sr-only">
             {notification?.text ??
@@ -451,6 +458,7 @@ export function App() {
             isSoloEndspurt={state.isSoloEndspurt}
             soloDiscardedValues={state.soloDiscardedValues}
             hasPinkChips={state.variant === 'party' || state.variant === 'crazy'}
+            exchangeAllowed={exchangeAllowed}
             onPlayCard={actions.playCard}
             onDrawCard={actions.drawCard}
             onFold={actions.fold}
@@ -465,6 +473,9 @@ export function App() {
               onNextRound={actions.nextRound}
               onNewGame={actions.newGame}
               onLeaveRoom={handleLeaveRoom}
+              exchangeAllowed={exchangeAllowed}
+              hasPinkChips={state.variant === 'party' || state.variant === 'crazy'}
+              onExchangeChips={actions.exchangeChips}
             />
           </Suspense>
         </main>

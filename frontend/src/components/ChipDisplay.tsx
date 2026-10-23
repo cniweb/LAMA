@@ -5,6 +5,7 @@ interface ChipDisplayProps {
   chips: ChipCount;
   totalScore?: number;
   size?: 'sm' | 'md' | 'lg';
+  totalScoreVisibility?: 'always' | 'sm';
   interactive?: boolean;
   onSelectChip?: (type: ChipType) => void;
   className?: string;
@@ -14,6 +15,7 @@ export const ChipDisplay: React.FC<ChipDisplayProps> = ({
   chips,
   totalScore,
   size = 'md',
+  totalScoreVisibility = 'always',
   interactive = false,
   onSelectChip,
   className = '',
@@ -44,7 +46,12 @@ export const ChipDisplay: React.FC<ChipDisplayProps> = ({
           >
             <span>20</span>
           </button>
-          <span className="font-bold text-slate-200 text-sm sm:text-base">×{pink}</span>
+          <span
+            data-testid="chip-count-pink"
+            className="font-bold text-slate-200 text-sm sm:text-base"
+          >
+            ×{pink}
+          </span>
         </div>
       ) : null}
 
@@ -62,7 +69,12 @@ export const ChipDisplay: React.FC<ChipDisplayProps> = ({
         >
           <span>10</span>
         </button>
-        <span className="font-bold text-slate-200 text-sm sm:text-base">×{chips.black}</span>
+        <span
+          data-testid="chip-count-black"
+          className="font-bold text-slate-200 text-sm sm:text-base"
+        >
+          ×{chips.black}
+        </span>
       </div>
 
       {/* White Chips (1s) */}
@@ -79,11 +91,18 @@ export const ChipDisplay: React.FC<ChipDisplayProps> = ({
         >
           <span>1</span>
         </button>
-        <span className="font-bold text-slate-200 text-sm sm:text-base">×{chips.white}</span>
+        <span
+          data-testid="chip-count-white"
+          className="font-bold text-slate-200 text-sm sm:text-base"
+        >
+          ×{chips.white}
+        </span>
       </div>
 
       {/* Total Score Badge */}
-      <div className="ml-1 px-2.5 py-0.5 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-300 font-extrabold text-xs sm:text-sm shadow-inner">
+      <div
+        className={`ml-1 px-2.5 py-0.5 rounded-full bg-rose-950/80 border border-rose-500/40 text-rose-300 font-extrabold text-xs sm:text-sm shadow-inner ${totalScoreVisibility === 'sm' ? 'hidden sm:block' : ''}`}
+      >
         {score} Pkt.
       </div>
     </div>
