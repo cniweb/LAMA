@@ -545,6 +545,22 @@ export function playCard(state: GameState, playerId: string, card: CardValue): G
       playersAfterGift[playerId] = { ...updatedPlayer, hand: giverHand };
       playersAfterGift[targetId] = { ...target, hand: [...target.hand, giftCard] };
     }
+
+    // Gift kann dem Spieler die letzte verbliebene Karte abnehmen. In diesem
+    // Fall endet die Runde erst nach der automatischen Weitergabe.
+    if (playersAfterGift[playerId].hand.length === 0) {
+      return settleRound(
+        {
+          ...state,
+          discardPile: updatedDiscardPile,
+          soloDiscardedValues: soloValues,
+          firstRoundExiterId: state.firstRoundExiterId ?? playerId,
+          players: playersAfterGift,
+        },
+        playerId
+      );
+    }
+
     const nextTurnIndex = getNextActiveTurnIndex(
       state.playerOrder,
       playersAfterGift,
