@@ -93,6 +93,7 @@ function createClientState(
     drawPileCount: 40,
     isSoloEndspurt: false,
     soloDiscardedValues: null,
+    nextRoundReadyPlayerIds: [],
     pendingChipDiscardPlayerId,
     lastRoundSummary: [
       {
