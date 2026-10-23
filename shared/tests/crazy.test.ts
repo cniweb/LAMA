@@ -5,6 +5,7 @@ import {
   calculateUniquePoints,
   canPlayCard,
   createInitialGameState,
+  discardBonusChip,
   exchangeChipsUp,
   fewestCardsActivePlayerId,
   filterStateForClient,
@@ -194,6 +195,54 @@ describe('Crazy Edition – Skip & Draw-Two', () => {
 });
 
 describe('Crazy Edition – Gift', () => {
+  it.each(['GL', 'SK', 'D2', 'GF'] as const)(
+    'beendet die Runde, wenn %s die letzte Handkarte ist',
+    (lastCard) => {
+      let state = setupCrazyRound();
+      state.turnIndex = 0;
+      state.discardPile = [3];
+      state.players.p1.hand = [lastCard];
+      state.players.p1.chips = { white: 3, black: 0, pink: 0 };
+      state.players.p1.totalScore = 3;
+
+      state = playCard(state, 'p1', lastCard);
+
+      expect(state.players.p1.hand).toEqual([]);
+      expect(state.pendingChipDiscardPlayerId).toBe('p1');
+      expect(state.phase).toBe('IN_ROUND');
+
+      state = discardBonusChip(state, 'p1', 'white');
+      expect(state.pendingChipDiscardPlayerId).toBeNull();
+      expect(state.players.p1.chips.white).toBe(2);
+      expect(state.phase).toBe('ROUND_SUMMARY');
+    }
+  );
+
+  it('beendet die Runde, wenn der Gift-Effekt die letzte Handkarte verschenkt', () => {
+    let state = setupCrazyRound();
+    state.turnIndex = 0;
+    state.discardPile = [3];
+    // GF wird abgelegt und die letzte verbleibende Karte dadurch verschenkt.
+    state.players.p1.hand = ['GF', 5];
+    state.players.p2.hand = [1];
+    state.players.p1.chips = { white: 3, black: 0, pink: 0 };
+    state.players.p1.totalScore = 3;
+
+    state = playCard(state, 'p1', 'GF');
+
+    expect(state.players.p1.hand).toEqual([]);
+    expect(state.players.p2.hand).toEqual([]);
+    expect(state.players.p2.foldedHand).toContain(5);
+    expect(state.lastRoundSummary?.find((score) => score.playerId === 'p2')?.cards).toContain(5);
+    expect(state.pendingChipDiscardPlayerId).toBe('p1');
+    expect(state.phase).toBe('IN_ROUND');
+
+    state = discardBonusChip(state, 'p1', 'white');
+    expect(state.pendingChipDiscardPlayerId).toBeNull();
+    expect(state.players.p1.chips.white).toBe(2);
+    expect(state.phase).toBe('ROUND_SUMMARY');
+  });
+
   it('Gift gibt die höchste Karte an den Spieler mit den wenigsten Karten', () => {
     let state = setupCrazyRound(['p1', 'p2', 'p3']);
     state.turnIndex = 0;
@@ -218,9 +267,12 @@ describe('Crazy Edition – Gift', () => {
     state.players.p3.hand = [4]; // gleich wenige wie p2
 
     state = playCard(state, 'p1', 'GF');
-    // Ab p1 nächster -> p2 gewinnt den Gleichstand.
-    expect(state.players.p2.hand.length).toBe(2);
-    expect(state.players.p3.hand.length).toBe(1);
+    // Ab p1 nächster -> p2 gewinnt den Gleichstand. Die verschenkte letzte
+    // Karte beendet danach die Runde und erscheint verdeckt in der Wertung.
+    expect(state.pendingChipDiscardPlayerId).toBeNull();
+    expect(state.phase).toBe('ROUND_SUMMARY');
+    expect(state.lastRoundSummary?.find((score) => score.playerId === 'p2')?.cards).toEqual([1, 5]);
+    expect(state.lastRoundSummary?.find((score) => score.playerId === 'p3')?.cards).toEqual([4]);
   });
 
   it('Gift im Solo verpufft (kein anderer aktiver Spieler)', () => {
