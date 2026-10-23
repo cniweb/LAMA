@@ -2,7 +2,7 @@ import type { CardValue, ChipCount, PlayerStatus } from '@lama/shared';
 import { LogOut, PlusCircle } from 'lucide-react';
 import type React from 'react';
 import { Card } from './Card.js';
-import { ChipDisplay } from './ChipDisplay.js';
+import { ChipExchangeControls } from './ChipExchangeControls.js';
 
 interface PlayerHandProps {
   hand: CardValue[];
@@ -17,6 +17,7 @@ interface PlayerHandProps {
   soloDiscardedValues?: CardValue[] | null;
   /** Varianten mit pinken 20er-Chips (Party & Crazy) zeigen den Pink-Tausch. */
   hasPinkChips?: boolean;
+  exchangeAllowed: boolean;
   onPlayCard: (card: CardValue) => void;
   onDrawCard: () => void;
   onFold: () => void;
@@ -35,6 +36,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   isSoloEndspurt,
   soloDiscardedValues,
   hasPinkChips = false,
+  exchangeAllowed,
   onPlayCard,
   onDrawCard,
   onFold,
@@ -43,88 +45,69 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const isFolded = status === 'FOLDED';
 
   return (
-    <div className="w-full flex flex-col items-center gap-3 pb-[env(safe-area-inset-bottom)]">
-      {/* Turn Action Controls Header
-          Einheitliche Höhe (min-h), damit die Zeile nicht springt, egal ob
-          Tausch-/Aktions-Buttons sichtbar sind. Immer eine Flex-Row mit
-          vertikaler Zentrierung; einzelne Blöcke dürfen bei Platzmangel intern
-          umbrechen (flex-wrap), die Container-Höhe bleibt dabei konstant.
-          Alle interaktiven Elemente teilen die gleiche Höhe (h-11 = 44px Touch). */}
+    <div className="w-full flex flex-col items-center gap-1 sm:gap-3 pb-[env(safe-area-inset-bottom)]">
+      {/* Stabile Zwei-Zeilen-Steuerung: Chips/Tausch oben, Zugstatus unten. */}
       <div
         data-testid="controls-bar"
-        className="flex flex-row items-center justify-between gap-2 sm:gap-3 w-full max-w-2xl h-[60px] px-3 sm:px-4 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-sm"
+        className="flex h-[96px] w-full max-w-2xl flex-col gap-1 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/80 px-2 backdrop-blur-sm"
       >
-        <div className="flex items-center gap-x-2 gap-y-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
-          <span className="text-xs sm:text-sm font-extrabold text-slate-300 whitespace-nowrap">
-            Deine Chips:
-          </span>
-          <ChipDisplay chips={chips} totalScore={totalScore} size="sm" />
-          {onExchangeChips && chips.white >= 10 && (
-            <button
-              type="button"
-              onClick={() => onExchangeChips('white')}
-              data-testid="exchange-chips-button"
-              className="inline-flex items-center h-11 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-amber-400/40 text-amber-300 font-bold text-xs shadow transition-all cursor-pointer hover:scale-105 whitespace-nowrap shrink-0"
-              title="10 weiße Chips gegen 1 schwarzen Chip tauschen"
-            >
-              10→1 tauschen
-            </button>
-          )}
-          {onExchangeChips && hasPinkChips && chips.black >= 2 && (
-            <button
-              type="button"
-              onClick={() => onExchangeChips('black')}
-              data-testid="exchange-black-to-pink-button"
-              className="inline-flex items-center h-11 px-2.5 rounded-lg bg-pink-950/60 hover:bg-pink-900 border border-pink-400/40 text-pink-300 font-bold text-xs shadow transition-all cursor-pointer hover:scale-105 whitespace-nowrap shrink-0"
-              title="2 schwarze Chips gegen 1 pinken 20er-Chip tauschen (Party & Crazy)"
-            >
-              2×10→20 tauschen
-            </button>
-          )}
+        <div data-testid="chips-status-row" className="flex h-11 min-h-11 w-full items-center">
+          <ChipExchangeControls
+            chips={chips}
+            totalScore={totalScore}
+            hasPinkChips={hasPinkChips}
+            exchangeAllowed={exchangeAllowed}
+            onExchangeChips={onExchangeChips}
+          />
         </div>
 
-        {isTurn ? (
-          <div className="flex items-center gap-2 shrink-0">
-            <span
-              data-testid="turn-indicator"
-              className="inline-flex items-center h-11 px-2.5 rounded-full bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider animate-pulse whitespace-nowrap"
-            >
-              Du bist am Zug!
+        <div
+          data-testid="turn-status-row"
+          className="flex h-11 min-h-11 w-full items-center justify-center gap-2"
+        >
+          {isTurn ? (
+            <div className="flex min-w-0 items-center justify-center gap-1 sm:gap-2">
+              <span
+                data-testid="turn-indicator"
+                className="inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-amber-500 px-2 sm:px-2.5 text-[10px] font-black uppercase tracking-wider text-slate-950 animate-pulse sm:text-xs"
+              >
+                Du bist am Zug!
+              </span>
+              {canFold && (
+                <button
+                  type="button"
+                  onClick={onFold}
+                  data-testid="fold-button"
+                  className="inline-flex h-11 shrink-0 cursor-pointer items-center gap-1 rounded-lg bg-rose-600/80 px-2 text-[10px] font-bold whitespace-nowrap text-rose-100 shadow-md transition-colors hover:bg-rose-600 sm:gap-1.5 sm:px-3 sm:text-xs"
+                  title="Aus dem Durchgang aussteigen und aktuelle Handkarten verdeckt sichern"
+                >
+                  <LogOut className="w-3.5 h-3.5 shrink-0" />
+                  <span>Aussteigen</span>
+                </button>
+              )}
+              {canDraw && (
+                <button
+                  type="button"
+                  onClick={onDrawCard}
+                  data-testid="draw-button"
+                  className="inline-flex h-11 shrink-0 cursor-pointer items-center gap-1 rounded-lg bg-blue-600/80 px-2 text-[10px] font-bold whitespace-nowrap text-blue-100 shadow-md transition-colors hover:bg-blue-600 sm:gap-1.5 sm:px-3 sm:text-xs"
+                  title="1 Karte vom Nachziehstapel ziehen"
+                >
+                  <PlusCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>Ziehen</span>
+                </button>
+              )}
+            </div>
+          ) : isFolded ? (
+            <span className="inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-slate-800 px-2.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+              Du bist ausgestiegen
             </span>
-            {canFold && (
-              <button
-                type="button"
-                onClick={onFold}
-                data-testid="fold-button"
-                className="inline-flex items-center gap-1.5 h-11 px-3 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-rose-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105 whitespace-nowrap"
-                title="Aus dem Durchgang aussteigen und aktuelle Handkarten verdeckt sichern"
-              >
-                <LogOut className="w-3.5 h-3.5 shrink-0" />
-                <span>Aussteigen</span>
-              </button>
-            )}
-            {canDraw && (
-              <button
-                type="button"
-                onClick={onDrawCard}
-                data-testid="draw-button"
-                className="inline-flex items-center gap-1.5 h-11 px-3 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-blue-100 font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-105 whitespace-nowrap"
-                title="1 Karte vom Nachziehstapel ziehen"
-              >
-                <PlusCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>Ziehen</span>
-              </button>
-            )}
-          </div>
-        ) : isFolded ? (
-          <span className="inline-flex items-center h-11 px-2.5 rounded-full bg-slate-800 text-slate-400 font-bold text-xs uppercase tracking-wider whitespace-nowrap shrink-0">
-            Du bist ausgestiegen
-          </span>
-        ) : (
-          <span className="inline-flex items-center h-11 text-xs font-semibold text-slate-400 whitespace-nowrap shrink-0">
-            Warten auf Mitspieler...
-          </span>
-        )}
+          ) : (
+            <span className="inline-flex h-11 shrink-0 items-center whitespace-nowrap text-xs font-semibold text-slate-400">
+              Warten auf Mitspieler...
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Solo Endspurt Notice */}

@@ -5,6 +5,7 @@ import type React from 'react';
 import { useEffect } from 'react';
 import { useModalDialog } from '../hooks/useModalDialog.js';
 import { Card } from './Card.js';
+import { ChipExchangeControls } from './ChipExchangeControls.js';
 
 interface RoundSummaryModalProps {
   state: ClientRoomView;
@@ -12,6 +13,9 @@ interface RoundSummaryModalProps {
   onNextRound: () => void;
   onNewGame: () => void;
   onLeaveRoom: () => void;
+  exchangeAllowed: boolean;
+  hasPinkChips: boolean;
+  onExchangeChips: (from: 'white' | 'black') => void;
 }
 
 export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
@@ -20,6 +24,9 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
   onNextRound,
   onNewGame,
   onLeaveRoom,
+  exchangeAllowed,
+  hasPinkChips,
+  onExchangeChips,
 }) => {
   const isGameOver = state.phase === 'GAME_OVER';
   const isPendingMyChipDiscard = state.pendingChipDiscardPlayerId === state.myPlayer.id;
@@ -90,6 +97,22 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
             <p className="text-sm text-slate-400 mt-0.5">
               Abrechnung nach dem Einmaligkeits-Prinzip
             </p>
+          </div>
+        )}
+
+        {exchangeAllowed && (
+          <div
+            data-testid="round-summary-chip-controls"
+            className="mb-5 flex min-h-11 w-full max-w-md items-center rounded-xl border border-slate-700 bg-slate-950/70 px-2 py-1"
+          >
+            <ChipExchangeControls
+              chips={state.myPlayer.chips}
+              totalScore={state.myPlayer.totalScore}
+              hasPinkChips={hasPinkChips}
+              exchangeAllowed={exchangeAllowed}
+              allowWrap
+              onExchangeChips={onExchangeChips}
+            />
           </div>
         )}
 
