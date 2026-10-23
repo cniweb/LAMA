@@ -6,6 +6,15 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.5.2] – Crazy-Geschenk beendet Runde – 2026-10-23
+
+### Behoben
+- **Crazy: Gift beendet die Runde nach der letzten Kartenweitergabe:** Wenn `GF`
+  die letzte verbleibende Karte des Gebers automatisch verschenkt, wird die Runde
+  anschließend abgerechnet. Der Finisher erhält wie beim Ablegen einer letzten
+  Karte die Möglichkeit, einen Chip seiner Wahl abzugeben. Finale Sonderkarten
+  (`GL`, `SK`, `D2`, `GF`) sind zusätzlich durch Regressionstests abgesichert.
+
 ## [2.5.1] – Rundenbereitschaft & Worker-Beobachtbarkeit – 2026-10-20
 
 ### Hinzugefügt
