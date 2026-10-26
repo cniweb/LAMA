@@ -35,7 +35,7 @@ Versuche, deine Handkarten so schnell wie möglich loszuwerden. Denn jede Karte,
 > * **Skip:** Der nächste aktive Spieler wird übersprungen.
 > * **Zieh 2 (Draw-Two):** Der nächste aktive Spieler zieht bis zu 2 Karten (so viele wie möglich) und setzt aus. Im Solo-Endspurt verpufft die Aktion.
 > * **Gift:** Deine höchste Handkarte geht automatisch an den aktiven Spieler mit den wenigsten Karten.
-> * Alle drei Aktionskarten sind **immer legbar**, zählen **0 Minuspunkte** und erlauben als oberste Karte eine beliebige Folgekarte. Pluskarten, pinkes Lama und 20er-Chips gelten wie in der Party Edition.
+> * Alle drei Aktionskarten sind **immer legbar**, zählen **je 15 Minuspunkte pro Karte** (auch doppelte) und erlauben als oberste Karte eine beliebige Folgekarte. Pluskarten, pinkes Lama und 20er-Chips gelten wie in der Party Edition.
 
 ---
 
@@ -112,7 +112,7 @@ Gelingt es dir, alle deine Handkarten abzulegen und damit die Runde siegreich zu
 
 ## 🏆 Spielende & Sieger
 
-* Nach jeder Abrechnung wird geprüft, ob mindestens ein Spieler **40 oder mehr Minuspunkte** erreicht hat.
+* Nach jeder Abrechnung wird geprüft, ob mindestens ein Spieler **40 oder mehr Minuspunkte** erreicht hat (**Crazy: 60**).
 * Ist dies der Fall, endet die gesamte Partie!
 * **Wer am Ende die wenigsten Minuspunkte hat, gewinnt das Spiel!** Bei Gleichstand teilen sich die punktgleichen Spieler den Sieg.
 
@@ -137,4 +137,3 @@ Du möchtest am Projekt mitwirken oder verstehen, wie es technisch funktioniert?
 - [Technischer Stack & Architektur](docs/tech-stack.md) – Details zum Cloudflare-Setup und der Systemarchitektur.
 - [Contribution Guide](CONTRIBUTION.md) – Onboarding-Leitfaden für neue Entwickler.
 - [CHANGELOG](CHANGELOG.md) – Übersicht aller Versionsänderungen.
-

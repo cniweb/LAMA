@@ -141,6 +141,7 @@ export function calculateUniquePoints(cards: CardValue[]): number {
   let hasLlama = false;
   let hasPinkLlama = false;
   let hasGoldenLlama = false;
+  let actionCardPoints = 0;
   for (const card of cards) {
     if (card === 'GL') {
       hasGoldenLlama = true;
@@ -149,7 +150,7 @@ export function calculateUniquePoints(cards: CardValue[]): number {
     } else if (card === 'L') {
       hasLlama = true;
     } else if (isActionCard(card)) {
-      // Zahllose Aktionskarten (SK/D2/GF) zählen 0 Minuspunkte.
+      actionCardPoints += 15;
     } else if (isPlusCard(card)) {
       const base = plusBaseValue(card);
       if (base !== null) seenNumbers.add(base);
@@ -157,7 +158,7 @@ export function calculateUniquePoints(cards: CardValue[]): number {
       seenNumbers.add(card as number);
     }
   }
-  let total = 0;
+  let total = actionCardPoints;
   for (const n of seenNumbers) total += n;
   // Lama-Gruppe zählt nur die höchste Stufe einmal: GL (30) > PL (20) > L (10).
   if (hasGoldenLlama) {
@@ -168,6 +169,10 @@ export function calculateUniquePoints(cards: CardValue[]): number {
     total += 10;
   }
   return total;
+}
+
+export function getGameOverThreshold(variant: GameVariant): number {
+  return variant === 'crazy' ? 60 : 40;
 }
 
 export function pointsToChips(points: number, variant: GameVariant = 'classic'): ChipCount {
@@ -829,15 +834,18 @@ export function settleRound(
     }
   }
 
-  // Check if game is over (any player has >= 40 total points)
+  // Check if game is over at the variant-specific point threshold.
   // Note: if there is a pending chip discard, we can still allow them to discard first, or evaluate game over after
-  const someoneReached40 = Object.values(updatedPlayers).some((p) => p.totalScore >= 40);
+  const gameOverThreshold = getGameOverThreshold(variant);
+  const someoneReachedThreshold = Object.values(updatedPlayers).some(
+    (p) => p.totalScore >= gameOverThreshold
+  );
 
   return {
     ...state,
     phase: pendingChipDiscardPlayerId
       ? 'IN_ROUND'
-      : someoneReached40
+      : someoneReachedThreshold
         ? 'GAME_OVER'
         : 'ROUND_SUMMARY',
     players: updatedPlayers,
@@ -847,7 +855,9 @@ export function settleRound(
     pendingChipDiscardPlayerId,
     lastRoundSummary: roundSummary,
     winners:
-      someoneReached40 && !pendingChipDiscardPlayerId ? determineWinners(updatedPlayers) : null,
+      someoneReachedThreshold && !pendingChipDiscardPlayerId
+        ? determineWinners(updatedPlayers)
+        : null,
   };
 }
 
@@ -1021,11 +1031,14 @@ export function removePlayerFromGame(state: GameState, playerId: string): GameSt
 
   // Ausstehende Chip-Rückgabe des Entfernten verfällt -> Abrechnungsphase auflösen.
   if (state.pendingChipDiscardPlayerId === playerId && order.length >= 2) {
-    const someoneReached40 = Object.values(rest).some((p) => p.totalScore >= 40);
+    const gameOverThreshold = getGameOverThreshold(state.variant ?? 'classic');
+    const someoneReachedThreshold = Object.values(rest).some(
+      (p) => p.totalScore >= gameOverThreshold
+    );
     return startNextRoundIfReady({
       ...withoutPlayer,
-      phase: someoneReached40 ? 'GAME_OVER' : 'ROUND_SUMMARY',
-      winners: someoneReached40 ? determineWinners(rest) : null,
+      phase: someoneReachedThreshold ? 'GAME_OVER' : 'ROUND_SUMMARY',
+      winners: someoneReachedThreshold ? determineWinners(rest) : null,
     });
   }
 
@@ -1122,15 +1135,18 @@ export function discardBonusChip(
       return s;
     }) ?? null;
 
-  const someoneReached40 = Object.values(updatedPlayers).some((p) => p.totalScore >= 40);
+  const gameOverThreshold = getGameOverThreshold(state.variant ?? 'classic');
+  const someoneReachedThreshold = Object.values(updatedPlayers).some(
+    (p) => p.totalScore >= gameOverThreshold
+  );
 
   return startNextRoundIfReady({
     ...state,
-    phase: someoneReached40 ? 'GAME_OVER' : 'ROUND_SUMMARY',
+    phase: someoneReachedThreshold ? 'GAME_OVER' : 'ROUND_SUMMARY',
     players: updatedPlayers,
     pendingChipDiscardPlayerId: null,
     lastRoundSummary: updatedSummary,
-    winners: someoneReached40 ? determineWinners(updatedPlayers) : null,
+    winners: someoneReachedThreshold ? determineWinners(updatedPlayers) : null,
   });
 }
 

@@ -1,4 +1,4 @@
-import type { GameVariant } from '@lama/shared';
+import { type GameVariant, getGameOverThreshold } from '@lama/shared';
 import { HelpCircle, X } from 'lucide-react';
 import type React from 'react';
 import { useModalDialog } from '../hooks/useModalDialog.js';
@@ -37,11 +37,13 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-2 mb-1">
-          <HelpCircle className="w-6 h-6 text-amber-400" />
-          <h2 id="rules-modal-title" className="text-xl sm:text-2xl font-black text-amber-400">
-            LAMA Spielregeln
-          </h2>
+        <div className="flex flex-wrap items-center gap-2 mb-1 pr-12 sm:flex-nowrap sm:pr-0">
+          <div className="flex items-center gap-2">
+            <HelpCircle className="w-6 h-6 text-amber-400" />
+            <h2 id="rules-modal-title" className="text-lg sm:text-2xl font-black text-amber-400">
+              LAMA Spielregeln
+            </h2>
+          </div>
           <span
             className={`ml-1 text-xs px-2 py-0.5 rounded-full font-bold border ${
               isCrazy
@@ -181,7 +183,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
               🔢 Abrechnung (Einmaligkeitsprinzip)
             </h3>
             <p>
-              Jeder Kartenwert zählt nur <strong>einmal</strong> als Minuspunkte:
+              {isCrazy ? 'Jeder normale Kartenwert' : 'Jeder Kartenwert'} zählt nur{' '}
+              <strong>einmal</strong> als Minuspunkte:
               <br />
               Drei 4er = 4 Minuspunkte. Lamas zählen 10 Minuspunkte.
               {hasPartyBase && (
@@ -195,7 +198,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
                 <>
                   {' '}
                   Goldenes Lama = <strong className="text-yellow-300">30</strong> (höchste
-                  Lama-Stufe gewinnt: GL 30 &gt; PL 20 &gt; L 10). Skip, Zieh 2 & Gift zählen 0.
+                  Lama-Stufe gewinnt: GL 30 &gt; PL 20 &gt; L 10). Skip, Zieh 2 & Gift zählen je 15
+                  Minuspunkte pro Karte.
                 </>
               )}
             </p>
@@ -208,8 +212,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
             <p>
               Wer alle Karten abgelegt hat, darf einen beliebigen Chip
               {hasPartyBase ? ' (auch pinken 20er!)' : ' (auch schwarzen 10er!)'} abgeben. Erreicht
-              jemand <strong>40 Minuspunkte</strong>, endet das Spiel und wer am wenigsten Punkte
-              hat, gewinnt!
+              jemand <strong>{getGameOverThreshold(variant)} Minuspunkte</strong>, endet das Spiel
+              und wer am wenigsten Punkte hat, gewinnt!
             </p>
           </section>
 
@@ -265,8 +269,9 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, variant
                 </li>
                 <li>
                   Alle drei Aktionskarten sind <strong>immer legbar</strong>, zählen{' '}
-                  <strong>0 Minuspunkte</strong> und erlauben als oberste Karte eine beliebige
-                  Folgekarte. Pluskarten, pinkes Lama und 20er-Chips wie in der Party Edition.
+                  <strong>je 15 Minuspunkte pro Karte</strong> und erlauben als oberste Karte eine
+                  beliebige Folgekarte. Pluskarten, pinkes Lama und 20er-Chips wie in der Party
+                  Edition.
                 </li>
               </ul>
             </section>

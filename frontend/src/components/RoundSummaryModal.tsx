@@ -1,4 +1,4 @@
-import type { ChipType, ClientRoomView } from '@lama/shared';
+import { type ChipType, type ClientRoomView, getGameOverThreshold } from '@lama/shared';
 import confetti from 'canvas-confetti';
 import { ArrowRight, Sparkles, Trophy } from 'lucide-react';
 import type React from 'react';
@@ -80,7 +80,7 @@ export const RoundSummaryModal: React.FC<RoundSummaryModalProps> = ({
               Spiel beendet!
             </h2>
             <p className="text-sm text-slate-300 mt-1">
-              Mindestens ein Spieler hat 40 Minuspunkte erreicht.
+              Mindestens ein Spieler hat {getGameOverThreshold(state.variant)} Minuspunkte erreicht.
             </p>
             {state.winners && state.winners.length > 0 && (
               <div className="mt-3 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-extrabold text-base">
