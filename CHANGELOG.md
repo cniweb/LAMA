@@ -6,10 +6,16 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.6.0] – Crazy-Regelupdate & Undici-Sicherheitsfix – 2026-10-26
+
 ### Geändert
 - **Crazy-Wertung und Spielende:** Jede Skip-, Zieh-2- und Gift-Karte zählt nun
   15 Minuspunkte pro Karte, auch bei mehrfach gleichen Karten. Das goldene Lama
   bleibt bei 30 Punkten; Crazy endet ab 60 Gesamtpunkten statt 40.
+
+### Behoben
+- **Responsive Regel-Dialog-Kopfzeile:** Das Varianten-Badge überlappt auf schmalen
+  Mobilbildschirmen nicht mehr mit dem Schließen-Button.
 
 ### Sicherheit
 - **Undici-Audit-Fix:** Erzwingt `undici@7.30.1` über npm-Overrides, da Miniflare
