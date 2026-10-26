@@ -47,6 +47,45 @@ test('crazy edition: raum erstellen, lobby-badge und rundenstart', async ({ brow
       await expect(p.getByTestId('variant-badge')).toHaveText('🦙✨ Crazy');
       await expect(p.getByTestId('player-hand').locator('button')).toHaveCount(6);
     }
+
+    await alice.getByTitle('Spielregeln ansehen').click();
+    const rules = alice.getByRole('dialog');
+    await expect(rules).toContainText('zählen je 15 Minuspunkte pro Karte');
+    await expect(rules).toContainText('Jeder normale Kartenwert zählt nur einmal');
+    await expect(rules).toContainText('60 Minuspunkte');
+    const crazyBadge = rules.getByText('🦙✨ Crazy', { exact: true });
+    const rulesTitle = rules.getByRole('heading', { name: 'LAMA Spielregeln' });
+    const headerIcon = rules.locator('svg').first();
+    const closeButton = rules.getByRole('button', { name: 'Regeln schließen' });
+    for (const width of [320, 390, 1280]) {
+      await alice.setViewportSize({ width, height: 800 });
+      await expect(rules).toBeVisible();
+      const documentWidth = await alice.evaluate(() => document.documentElement.scrollWidth);
+      expect(documentWidth, `Crazy-Regeln bei ${width}px`).toBeLessThanOrEqual(width);
+
+      const badgeBox = await crazyBadge.boundingBox();
+      const closeBox = await closeButton.boundingBox();
+      if (!badgeBox || !closeBox) {
+        throw new Error(`Expected visible badge and close button at ${width}px.`);
+      }
+      const titleBox = await rulesTitle.boundingBox();
+      const iconBox = await headerIcon.boundingBox();
+      if (!titleBox || !iconBox) {
+        throw new Error(`Expected visible title and icon at ${width}px.`);
+      }
+      const iconAndTitleShareRow =
+        titleBox.y < iconBox.y + iconBox.height && titleBox.y + titleBox.height > iconBox.y;
+      expect(iconAndTitleShareRow, `Titel-Icon-Zeile bei ${width}px`).toBe(true);
+
+      const overlaps =
+        badgeBox.x < closeBox.x + closeBox.width &&
+        badgeBox.x + badgeBox.width > closeBox.x &&
+        badgeBox.y < closeBox.y + closeBox.height &&
+        badgeBox.y + badgeBox.height > closeBox.y;
+      expect(overlaps, `Crazy-Badge überlappt den Schließen-Button bei ${width}px`).toBe(false);
+
+      await alice.screenshot({ path: `test-results/crazy-rules-${width}.png` });
+    }
   } finally {
     await aliceCtx.close();
     await bobCtx.close();

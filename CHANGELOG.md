@@ -6,6 +6,15 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+### Geändert
+- **Crazy-Wertung und Spielende:** Jede Skip-, Zieh-2- und Gift-Karte zählt nun
+  15 Minuspunkte pro Karte, auch bei mehrfach gleichen Karten. Das goldene Lama
+  bleibt bei 30 Punkten; Crazy endet ab 60 Gesamtpunkten statt 40.
+
+### Sicherheit
+- **Undici-Audit-Fix:** Erzwingt `undici@7.30.1` über npm-Overrides, da Miniflare
+  `7.29.1` fest pinnt; beseitigt die drei Advisories ohne Wrangler-Downgrade.
+
 ## [2.5.2] – Crazy-Geschenk beendet Runde – 2026-10-23
 
 ### Behoben

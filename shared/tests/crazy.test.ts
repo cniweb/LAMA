@@ -17,6 +17,7 @@ import {
   isSkipCard,
   playCard,
   pointsToChips,
+  removePlayerFromGame,
   startRound,
 } from '../src/game-engine.js';
 
@@ -98,6 +99,40 @@ describe('Crazy Edition – Legeregeln', () => {
   });
 });
 
+function setupVariantRound(
+  variant: 'classic' | 'party' | 'crazy',
+  playerIds: string[] = ['p1', 'p2']
+): ReturnType<typeof startRound> {
+  let state = createInitialGameState('CRZY', playerIds[0], variant);
+  for (const [i, id] of playerIds.entries()) {
+    state = addPlayerToRoom(state, id, `Spieler ${i + 1}`);
+  }
+  return startRound(state, playerIds[0]);
+}
+
+function stateAtScoreAfterFinisher(
+  score: 59 | 60,
+  resolution: 'discard' | 'remove'
+): ReturnType<typeof startRound> {
+  let state = setupVariantRound('crazy', ['p1', 'p2', 'p3']);
+  state.turnIndex = 0;
+  state.discardPile = [1];
+  state.players.p1.hand = [1];
+  state.players.p1.chips = { white: 1, black: 0, pink: 0 };
+  state.players.p2.chips =
+    score === 59 ? { white: 9, black: 1, pink: 1 } : { white: 5, black: 2, pink: 1 };
+  state.players.p2.hand = score === 59 ? ['PL'] : ['SK'];
+  state.players.p3.hand = [2];
+
+  state = playCard(state, 'p1', 1);
+  expect(state.pendingChipDiscardPlayerId).toBe('p1');
+  expect(state.players.p2.totalScore).toBe(score);
+
+  return resolution === 'discard'
+    ? discardBonusChip(state, 'p1', 'white')
+    : removePlayerFromGame(state, 'p1');
+}
+
 describe('Crazy Edition – Wertung', () => {
   it('Lama-Gruppe zählt nur die höchste Stufe: GL=30 > PL=20 > L=10', () => {
     expect(calculateUniquePoints(['GL', 'L', 'PL'])).toBe(30);
@@ -106,10 +141,72 @@ describe('Crazy Edition – Wertung', () => {
     expect(calculateUniquePoints(['GL', 2, 3])).toBe(35);
   });
 
-  it('Aktionskarten SK/D2/GF zählen 0 Punkte', () => {
-    expect(calculateUniquePoints(['SK', 'D2', 'GF', 4])).toBe(4);
-    expect(calculateUniquePoints(['SK', 'D2', 'GF'])).toBe(0);
+  it('zählt jede Aktionskarte einzeln und lässt GL bei 30', () => {
+    expect(calculateUniquePoints(['SK', 'SK', 'D2', 'GF', 'GF', 4, 4, 'GL'])).toBe(109);
+    expect(calculateUniquePoints(['GL', 'PL', 'L'])).toBe(30);
+    expect(calculateUniquePoints(['SK', 'D2', 'GF', 4])).toBe(49);
+    expect(calculateUniquePoints(['SK', 'D2', 'GF'])).toBe(45);
   });
+
+  it.each([
+    { score: 59, expectedPhase: 'ROUND_SUMMARY' },
+    { score: 60, expectedPhase: 'GAME_OVER' },
+  ] as const)(
+    'beendet Crazy bei 60, aber nicht bei 59 ($score Punkte)',
+    ({ score, expectedPhase }) => {
+      let state = setupVariantRound('crazy');
+      state.turnIndex = 0;
+      state.discardPile = [1];
+      state.players.p1.hand = [1];
+      state.players.p2.chips =
+        score === 59 ? { white: 9, black: 1, pink: 1 } : { white: 5, black: 2, pink: 1 };
+      state.players.p2.hand = score === 59 ? ['PL'] : ['SK'];
+
+      state = playCard(state, 'p1', 1);
+
+      expect(state.players.p2.totalScore).toBe(score);
+      expect(state.phase).toBe(expectedPhase);
+    }
+  );
+
+  it.each([
+    { variant: 'classic', chips: { white: 9, black: 3, pink: 0 } },
+    { variant: 'party', chips: { white: 9, black: 1, pink: 1 } },
+  ] as const)('beendet $variant weiterhin bei 40', ({ variant, chips }) => {
+    let state = setupVariantRound(variant);
+    state.turnIndex = 0;
+    state.discardPile = [1];
+    state.players.p1.hand = [1];
+    state.players.p2.chips = chips;
+    state.players.p2.hand = [1];
+
+    state = playCard(state, 'p1', 1);
+
+    expect(state.players.p2.totalScore).toBe(40);
+    expect(state.phase).toBe('GAME_OVER');
+  });
+
+  it.each([
+    { score: 59, expectedPhase: 'ROUND_SUMMARY' },
+    { score: 60, expectedPhase: 'GAME_OVER' },
+  ] as const)(
+    'wertet die Crazy-Grenze nach Bonus-Chip-Abgabe aus ($score Punkte)',
+    ({ score, expectedPhase }) => {
+      const state = stateAtScoreAfterFinisher(score, 'discard');
+      expect(state.phase).toBe(expectedPhase);
+    }
+  );
+
+  it.each([
+    { score: 59, expectedPhase: 'ROUND_SUMMARY' },
+    { score: 60, expectedPhase: 'GAME_OVER' },
+  ] as const)(
+    'wertet die Crazy-Grenze nach Entfernen des Bonus-Finishers aus ($score Punkte)',
+    ({ score, expectedPhase }) => {
+      const state = stateAtScoreAfterFinisher(score, 'remove');
+      expect(state.phase).toBe(expectedPhase);
+    }
+  );
 
   it('pointsToChips/exchange: crazy nutzt pinke 20er-Chips', () => {
     expect(pointsToChips(30, 'crazy')).toEqual({ white: 0, black: 1, pink: 1 });
@@ -202,6 +299,7 @@ describe('Crazy Edition – Gift', () => {
       state.turnIndex = 0;
       state.discardPile = [3];
       state.players.p1.hand = [lastCard];
+      state.players.p2.hand = [1, 2];
       state.players.p1.chips = { white: 3, black: 0, pink: 0 };
       state.players.p1.totalScore = 3;
 

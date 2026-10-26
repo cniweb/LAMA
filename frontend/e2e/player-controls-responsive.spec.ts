@@ -231,6 +231,30 @@ test('Spiel-Steuerleiste bleibt zweizeilig und bedienbar bei 320, 390 und 1280px
   }
 });
 
+test('Spielende nennt die variantenspezifische Punkteschwelle', async ({ browser }) => {
+  for (const [variant, threshold] of [
+    ['crazy', 60],
+    ['classic', 40],
+  ] as const) {
+    const page = await browser.newPage();
+    try {
+      await openMockRoom(page, createClientState('GAME_OVER', false, null, variant));
+      const gameOverMessage = page.getByText(
+        `Mindestens ein Spieler hat ${threshold} Minuspunkte erreicht.`
+      );
+      for (const width of VIEWPORTS) {
+        await page.setViewportSize({ width, height: 760 });
+        await expect(gameOverMessage).toBeVisible();
+        const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        expect(documentWidth, `${variant} Spielende bei ${width}px`).toBeLessThanOrEqual(width);
+        await page.screenshot({ path: `test-results/game-over-${variant}-${width}.png` });
+      }
+    } finally {
+      await page.close();
+    }
+  }
+});
+
 test('Chiptausch ist nur am Zug oder während der eigenen Wertung verfügbar', async ({ page }) => {
   await openMockRoom(page, createClientState('IN_ROUND', false));
   const controls = page.getByTestId('controls-bar');
