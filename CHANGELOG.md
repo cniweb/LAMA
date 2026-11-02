@@ -6,6 +6,21 @@ Bei jeder neuen Version einen Eintrag im Format unten ergänzen
 
 ## [Unreleased]
 
+## [2.6.1] – Mobile-Viewport-Fix & Dependency-Updates – 2026-11-02
+
+### Behoben
+- **Kein vertikales Scrollen bei 7 Handkarten auf 360×640px:** Wenn ein Spieler im
+  ersten Zug eine Karte zieht und seine Hand auf Mobile in eine zweite Kartenzeile
+  umbricht, überstieg die Gesamthöhe den 640px-Viewport minimal um `2px`. Kompaktere
+  mobile Abstände in `Opponent`, `DiscardPile` und `PlayerHand` schaffen ~18px
+  vertikalen Puffer, ohne Desktop-Abstände (`sm:`) oder die feste `96px`-Steuerleiste
+  zu verändern.
+
+### Geändert
+- **Abhängigkeiten aktualisiert:** `react` & `react-dom` auf `19.3.1`, `vite` auf
+  `8.3.5`, `lucide-react` auf `1.61.0`, `wrangler` auf `4.153.0`,
+  `@cloudflare/workers-types` auf `5.20261026.1` und `@biomejs/biome` auf `2.6.3`.
+
 ## [2.6.0] – Crazy-Regelupdate & Undici-Sicherheitsfix – 2026-10-26
 
 ### Geändert
