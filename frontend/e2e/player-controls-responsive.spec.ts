@@ -323,4 +323,16 @@ test('Chiptausch ist im Wertungsdialog und im Bonus-Chip-Dialog erreichbar', asy
     pendingPage.getByTestId('round-summary-chip-controls').getByTestId('exchange-chips-button')
   ).toBeVisible();
   await pendingPage.close();
+
+  await page.setViewportSize({ width: 360, height: 640 });
+  const baseState = createClientState('IN_ROUND', false);
+  await openMockRoom(page, {
+    ...baseState,
+    myPlayer: { ...baseState.myPlayer, hand: [1, 2, 3, 4, 5, 6, 'L'] },
+    opponents: baseState.opponents.map((opp, idx) => (idx === 0 ? { ...opp, isTurn: true } : opp)),
+  });
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollHeight - window.innerHeight
+  );
+  expect(overflow, `[e2e][mobile] 7-karten-360x640: overflow=${overflow}px`).toBeLessThanOrEqual(0);
 });

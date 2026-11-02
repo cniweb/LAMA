@@ -64,7 +64,7 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
           )}
         </div>
 
-        <div className="mt-4 flex flex-col items-center">
+        <div className="mt-3 sm:mt-4 flex flex-col items-center">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
             Nachziehstapel
           </span>
@@ -103,7 +103,7 @@ export const DiscardPile: React.FC<DiscardPileProps> = ({
           </div>
         </div>
 
-        <span className="mt-4 text-xs font-bold uppercase tracking-wider text-slate-400">
+        <span className="mt-3 sm:mt-4 text-xs font-bold uppercase tracking-wider text-slate-400">
           Ablagestapel
         </span>
       </div>

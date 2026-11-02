@@ -123,7 +123,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       {/* Hand Cards Fan */}
       <div
         data-testid="player-hand"
-        className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-1 sm:py-2 px-2 max-w-4xl min-h-[92px] sm:min-h-[140px]"
+        className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 py-0.5 sm:py-2 px-2 max-w-4xl min-h-[92px] sm:min-h-[140px]"
       >
         {isFolded ? (
           <div className="flex flex-col items-center justify-center p-4 rounded-xl border border-dashed border-slate-700/60 bg-slate-900/40 text-slate-400">

@@ -36,7 +36,7 @@ export const Opponent: React.FC<OpponentProps> = ({ opponent }) => {
       )}
 
       {/* Opponent Info Header */}
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-1 sm:mb-2">
         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center font-bold text-slate-950 text-xs sm:text-sm shadow">
           {opponent.name.charAt(0).toUpperCase()}
         </div>
@@ -55,7 +55,7 @@ export const Opponent: React.FC<OpponentProps> = ({ opponent }) => {
       </div>
 
       {/* Cards Fan (Face Down) */}
-      <div className="relative h-14 sm:h-16 flex items-center justify-center mb-2 px-3">
+      <div className="relative h-14 sm:h-16 flex items-center justify-center mb-1 sm:mb-2 px-3">
         {opponent.cardCount === 0 ? (
           <span className="text-xs text-slate-400 italic">Keine Handkarten</span>
         ) : (
@@ -75,7 +75,7 @@ export const Opponent: React.FC<OpponentProps> = ({ opponent }) => {
         )}
       </div>
 
-      <div className="text-[11px] font-bold text-slate-400 mb-1.5">
+      <div className="text-[11px] font-bold text-slate-400 mb-1 sm:mb-1.5">
         {opponent.cardCount} {opponent.cardCount === 1 ? 'Karte' : 'Karten'}
       </div>
 
